@@ -3,10 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Comandero Taquería</title>
+  <title>Carnitas El Jarocho - POS</title>
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#F59E0B">
+  <link rel="apple-touch-icon" href="./icon.png">
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Dexie.js CDN (IndexedDB Wrapper) -->
+  <!-- Dexie.js CDN -->
   <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.js"></script>
   <script>
     tailwind.config = {
@@ -20,123 +23,126 @@
     }
   </script>
   <style>
-    /* Desactiva selección de texto para evitar molestias al tocar rápido */
     * { -webkit-tap-highlight-color: transparent; user-select: none; }
   </style>
 </head>
 <body class="bg-brand-dark text-brand-text flex flex-col h-screen overflow-hidden font-sans">
 
-  <!-- TOP BAR: Navegación rápida -->
-  <header class="bg-brand-card px-4 py-3 border-b border-slate-700 flex justify-between items-center shrink-0">
-    <div>
-      <h1 class="font-black text-lg tracking-wide text-brand-accent">TAQUERÍA OS</h1>
-      <p class="text-xs text-slate-400">Terminal Móvil v1.0</p>
+  <!-- TOP BAR -->
+  <header class="bg-brand-card px-4 py-2.5 border-b border-slate-700 flex justify-between items-center shrink-0">
+    <div class="flex items-center gap-2">
+      <img src="./icon.png" alt="Logo" onerror="this.style.display='none'" class="w-8 h-8 rounded-lg object-cover border border-brand-accent">
+      <div>
+        <h1 class="font-black text-base tracking-wide text-brand-accent leading-none">EL JAROCHO</h1>
+        <p class="text-[10px] text-slate-400">Carnitas • Comandero v2.0</p>
+      </div>
     </div>
     <div class="flex gap-2">
-      <button onclick="cambiarVista('comanda')" id="btn-tab-comanda" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-brand-accent text-slate-900 transition">Comanda</button>
+      <button onclick="cambiarVista('comanda')" id="btn-tab-comanda" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-brand-accent text-slate-900 transition">Mesas</button>
       <button onclick="cambiarVista('corte')" id="btn-tab-corte" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 transition">Ventas del Día</button>
     </div>
   </header>
 
-  <!-- VISTA 1: TOMADOR DE COMANDAS -->
-  <main id="vista-comanda" class="flex-1 flex flex-col md:flex-row overflow-hidden">
+  <!-- VISTA 1: COMANDERO MULTIMESA -->
+  <main id="vista-comanda" class="flex-1 flex flex-col overflow-hidden">
     
-    <!-- Panel Izquierdo: Catálogo y selección de mesa -->
-    <section class="flex-1 flex flex-col p-3 overflow-y-auto">
-      
-      <!-- Controles de Mesa y Comensales -->
-      <div class="grid grid-cols-2 gap-2 mb-3 shrink-0">
-        <div class="bg-brand-card p-2 rounded-xl border border-slate-700">
-          <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Mesa / Ubicación</label>
-          <select id="select-mesa" class="w-full bg-slate-900 text-sm font-semibold rounded-lg p-2 border border-slate-700 text-white focus:outline-none focus:border-brand-accent">
-            <option value="Mesa 1">Mesa 1</option>
-            <option value="Mesa 2">Mesa 2</option>
-            <option value="Mesa 3">Mesa 3</option>
-            <option value="Mesa 4">Mesa 4</option>
-            <option value="Barra 1">Barra 1</option>
-            <option value="Barra 2">Barra 2</option>
-            <option value="Para Llevar">Para Llevar</option>
-          </select>
-        </div>
+    <!-- BARRA DE SELECCIÓN DE MESAS (Estilo Libreta de Cuentas Abiertas) -->
+    <div class="bg-slate-900/90 px-3 py-2 border-b border-slate-800 shrink-0">
+      <div class="grid grid-cols-5 gap-1.5" id="barra-mesas">
+        <!-- Renderizado dinámicamente con estado de cuenta abierta -->
+      </div>
+    </div>
 
-        <div class="bg-brand-card p-2 rounded-xl border border-slate-700">
-          <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Comensales</label>
-          <div class="flex items-center justify-between bg-slate-900 rounded-lg border border-slate-700 px-2 py-0.5">
-            <button onclick="ajustarComensales(-1)" class="text-lg font-black text-brand-accent p-1">-</button>
-            <span id="label-comensales" class="font-bold text-sm">2</span>
-            <button onclick="ajustarComensales(1)" class="text-lg font-black text-brand-accent p-1">+</button>
+    <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
+      <!-- Panel Izquierdo: Comensales y Productos -->
+      <section class="flex-1 flex flex-col p-3 overflow-y-auto">
+        
+        <!-- Info de la Mesa Seleccionada y Comensales -->
+        <div class="bg-brand-card p-2.5 rounded-xl border border-slate-700 flex justify-between items-center mb-3 shrink-0">
+          <div>
+            <span class="text-[10px] uppercase font-bold text-slate-400 block">Anotando en:</span>
+            <span id="titulo-mesa-actual" class="text-base font-black text-brand-accent">Mesa 1</span>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <span class="text-xs font-bold text-slate-300">Comensales:</span>
+            <div class="flex items-center bg-slate-900 rounded-lg border border-slate-700 px-2 py-1 gap-3">
+              <button onclick="ajustarComensales(-1)" class="w-7 h-7 bg-slate-800 rounded text-lg font-black text-brand-accent flex items-center justify-center active:scale-90">-</button>
+              <span id="label-comensales" class="font-black text-sm w-5 text-center">1</span>
+              <button onclick="ajustarComensales(1)" class="w-7 h-7 bg-slate-800 rounded text-lg font-black text-brand-accent flex items-center justify-center active:scale-90">+</button>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Cuadrícula de Productos -->
-      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 pb-20 md:pb-0" id="grid-productos">
-        <!-- Renderizado por JS -->
-      </div>
-    </section>
-
-    <!-- Panel Derecho: Carrito y Cierre de Cuenta -->
-    <section class="w-full md:w-80 bg-brand-card border-t md:border-t-0 md:border-l border-slate-700 flex flex-col shrink-0">
-      <div class="p-3 border-b border-slate-700 flex justify-between items-center">
-        <h2 class="font-bold text-sm text-slate-300">Cuenta Activa</h2>
-        <button onclick="limpiarCarrito()" class="text-xs text-red-400 hover:text-red-300 font-semibold">Vaciar</button>
-      </div>
-
-      <!-- Lista de Ítems en Carrito -->
-      <div id="lista-carrito" class="flex-1 overflow-y-auto p-3 space-y-2 max-h-48 md:max-h-full">
-        <!-- Renglones agregados dinámicamente -->
-      </div>
-
-      <!-- Total y Botón de Cobro -->
-      <div class="p-3 bg-slate-900/80 border-t border-slate-700 shrink-0 space-y-2">
-        <div class="flex justify-between items-end">
-          <span class="text-xs text-slate-400 font-medium">Total a Cobrar</span>
-          <span id="label-total" class="text-2xl font-black text-brand-accent">$0.00</span>
+        <!-- Cuadrícula de los 4 Productos Principales (Botones Grandes) -->
+        <div class="grid grid-cols-2 gap-3 flex-1" id="grid-productos">
+          <!-- Renderizado por JS -->
         </div>
-        <button onclick="cobrarOrden()" class="w-full py-3 bg-brand-accent text-slate-950 font-black rounded-xl text-base shadow-lg active:scale-95 transition">
-          REGISTRAR VENTA
-        </button>
-      </div>
-    </section>
+      </section>
+
+      <!-- Panel Derecho / Inferior: Cuenta Acumulada de la Mesa -->
+      <section class="w-full md:w-80 bg-brand-card border-t md:border-t-0 md:border-l border-slate-700 flex flex-col shrink-0">
+        <div class="px-3 py-2 border-b border-slate-700 flex justify-between items-center">
+          <div>
+            <h2 class="font-bold text-xs text-slate-200">Hoja de Pedido (<span id="subtitulo-mesa">Mesa 1</span>)</h2>
+            <p id="hora-apertura-label" class="text-[10px] text-slate-400">Sin cuenta abierta</p>
+          </div>
+          <button onclick="cancelarCuentaMesa()" class="text-[11px] text-red-400 hover:text-red-300 font-semibold px-2 py-1 rounded bg-slate-800/60">Cancelar Mesa</button>
+        </div>
+
+        <!-- Lista de Ítems Acumulados en la Mesa -->
+        <div id="lista-carrito" class="flex-1 overflow-y-auto p-3 space-y-2 max-h-44 md:max-h-full">
+          <!-- Renglones de la mesa actual -->
+        </div>
+
+        <!-- Total Acumulado y Botón de Cierre / Cobro -->
+        <div class="p-3 bg-slate-900/90 border-t border-slate-700 shrink-0 space-y-2">
+          <div class="flex justify-between items-end">
+            <span class="text-xs text-slate-400 font-medium">Total Acumulado</span>
+            <span id="label-total" class="text-2xl font-black text-brand-accent">$0.00</span>
+          </div>
+          <button onclick="cobrarCerrarMesa()" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-sm tracking-wide shadow-lg active:scale-95 transition">
+            COBRAR Y CERRAR MESA
+          </button>
+        </div>
+      </section>
+    </div>
   </main>
 
-  <!-- VISTA 2: VENTAS DEL DÍA (CORTE LOCAL) -->
+  <!-- VISTA 2: VENTAS DEL DÍA (HISTORIAL DE MESAS COBRADAS) -->
   <main id="vista-corte" class="flex-1 flex flex-col p-4 overflow-y-auto hidden">
-    <!-- Métricas Clave del Día -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
       <div class="bg-brand-card p-3 rounded-xl border border-slate-700">
-        <span class="text-[10px] uppercase text-slate-400 font-bold block">Venta Total Hoy</span>
+        <span class="text-[10px] uppercase text-slate-400 font-bold block">Venta Cobrada Hoy</span>
         <span id="metric-venta-total" class="text-xl font-black text-emerald-400">$0.00</span>
       </div>
       <div class="bg-brand-card p-3 rounded-xl border border-slate-700">
-        <span class="text-[10px] uppercase text-slate-400 font-bold block">Comandas</span>
+        <span class="text-[10px] uppercase text-slate-400 font-bold block">Cuentas Cerradas</span>
         <span id="metric-total-ordenes" class="text-xl font-black text-white">0</span>
       </div>
       <div class="bg-brand-card p-3 rounded-xl border border-slate-700">
-        <span class="text-[10px] uppercase text-slate-400 font-bold block">Comensales</span>
+        <span class="text-[10px] uppercase text-slate-400 font-bold block">Comensales Totales</span>
         <span id="metric-total-comensales" class="text-xl font-black text-white">0</span>
       </div>
       <div class="bg-brand-card p-3 rounded-xl border border-slate-700">
-        <span class="text-[10px] uppercase text-slate-400 font-bold block">Ticket Promedio / Persona</span>
+        <span class="text-[10px] uppercase text-slate-400 font-bold block">Promedio / Persona</span>
         <span id="metric-ticket-promedio" class="text-xl font-black text-brand-accent">$0.00</span>
       </div>
     </div>
 
-    <!-- Acciones de Datos -->
     <div class="flex justify-between items-center mb-2">
-      <h3 class="text-sm font-bold text-slate-300">Historial de Órdenes Guardadas</h3>
-      <button onclick="exportarJSON()" class="px-3 py-1 bg-slate-800 text-xs font-bold text-brand-accent border border-slate-700 rounded-lg">
+      <h3 class="text-sm font-bold text-slate-300">Registro de Cuentas Cobradas</h3>
+      <button onclick="exportarJSON()" class="px-3 py-1.5 bg-slate-800 text-xs font-bold text-brand-accent border border-slate-700 rounded-lg">
         Descargar JSON
       </button>
     </div>
 
-    <!-- Tabla Detallada -->
     <div class="bg-brand-card rounded-xl border border-slate-700 flex-1 overflow-x-auto">
       <table class="w-full text-left text-xs">
         <thead class="bg-slate-900/60 text-slate-400 font-bold border-b border-slate-700">
           <tr>
-            <th class="p-3">Hora</th>
-            <th class="p-3">Mesa</th>
+            <th class="p-3">Hora Cobro</th>
+            <th class="p-3">Ubicación</th>
             <th class="p-3">Pers.</th>
             <th class="p-3">Productos</th>
             <th class="p-3 text-right">Total</th>
@@ -144,162 +150,287 @@
           </tr>
         </thead>
         <tbody id="tabla-corte-body" class="divide-y divide-slate-800 text-slate-200">
-          <!-- Renglones de la BD -->
         </tbody>
       </table>
     </div>
   </main>
 
-  <!-- LÓGICA DE PERSISTENCIA Y APLICACIÓN -->
   <script>
-    // 1. INICIALIZAR BASE DE DATOS LOCAL (IndexedDB vía Dexie)
-    const db = new Dexie("TaqueriaDB");
-    db.version(1).stores({
-      // Índices clave para búsquedas y sincronización
-      ordenes: "orden_id, fecha_cierre, sync_status"
-    });
-
-    // 2. CATÁLOGO BASE DE PRODUCTOS
-    const CATALOGO = [
-      { id: 1, nombre: "Taco Pastor", precio: 18, cat: "tacos" },
-      { id: 2, nombre: "Taco Suadero", precio: 20, cat: "tacos" },
-      { id: 3, nombre: "Taco Bistec", precio: 22, cat: "tacos" },
-      { id: 4, nombre: "Taco Tripa", precio: 25, cat: "tacos" },
-      { id: 5, nombre: "Gringa Pastor", precio: 45, cat: "especial" },
-      { id: 6, nombre: "Boing Guayaba", precio: 25, cat: "bebidas" },
-      { id: 7, nombre: "Coca-Cola 600ml", precio: 30, cat: "bebidas" },
-      { id: 8, nombre: "Agua de Horchata", precio: 25, cat: "bebidas" }
-    ];
-
-    // 3. ESTADO REACTIVO EN MEMORIA
-    let comensales = 2;
-    let carrito = {}; // Estructura: { producto_id: { nombre, precio, cantidad } }
-
-    // Render inicial del catálogo
-    const grid = document.getElementById("grid-productos");
-    CATALOGO.forEach(p => {
-      const btn = document.createElement("button");
-      btn.className = "bg-brand-card border border-slate-700 active:border-brand-accent p-3 rounded-xl flex flex-col justify-between text-left h-20 shadow active:scale-95 transition";
-      btn.onclick = () => agregarAlCarrito(p);
-      btn.innerHTML = `
-        <span class="font-bold text-xs text-slate-100">${p.nombre}</span>
-        <span class="font-black text-sm text-brand-accent">$${p.precio.toFixed(2)}</span>
-      `;
-      grid.appendChild(btn);
-    });
-
-    // Control de Comensales
-    function ajustarComensales(delta) {
-      comensales = Math.max(1, comensales + delta);
-      document.getElementById("label-comensales").innerText = comensales;
+    // 1. REGISTRO DEL SERVICE WORKER (Para instalar como App en Android)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW fallo:', err));
+      });
     }
 
-    // Carrito de compras
-    function agregarAlCarrito(producto) {
-      if (carrito[producto.id]) {
-        carrito[producto.id].cantidad += 1;
+    // 2. BASE DE DATOS LOCAL (IndexedDB con 2 Tablas: Mesas Abiertas y Ventas Cerradas)
+    const db = new Dexie("ElJarochoDB");
+    db.version(1).stores({
+      mesas_activas: "mesa_id", // Guarda el pedido en curso de cada mesa
+      ordenes: "orden_id, fecha_cierre, sync_status" // Historial de ventas cerradas
+    });
+
+    // 3. CONFIGURACIÓN DE UBICACIONES Y CATÁLOGO DE CARNITAS EL JAROCHO
+    const UBICACIONES = ["Mesa 1", "Mesa 2", "Mesa 3", "Mesa 4", "Para Llevar"];
+
+    const CATALOGO = [
+      { id: 1, nombre: "Tacos", precio: 28, icono: "🌮" },
+      { id: 2, nombre: "Tortas", precio: 40, icono: "🥖" },
+      { id: 3, nombre: "Gorditas", precio: 35, icono: "🫓" },
+      { id: 4, nombre: "Refrescos", precio: 28, icono: "🥤" }
+    ];
+
+    // Estado en memoria sincronizado con IndexedDB
+    let mesaActual = "Mesa 1";
+    let estadoMesas = {};
+
+    // Inicializar estructura de las 5 ubicaciones
+    async function inicializarApp() {
+      for (const nombreMesa of UBICACIONES) {
+        const guardada = await db.mesas_activas.get(nombreMesa);
+        if (guardada) {
+          estadoMesas[nombreMesa] = guardada;
+        } else {
+          estadoMesas[nombreMesa] = {
+            mesa_id: nombreMesa,
+            comensales: 1,
+            items: {}, // { prod_id: { nombre, precio_unitario, cantidad } }
+            fecha_apertura: null
+          };
+        }
+      }
+      renderizarCatalogo();
+      renderizarTodo();
+    }
+
+    // Dibujar botones grandes de productos
+    function renderizarCatalogo() {
+      const grid = document.getElementById("grid-productos");
+      grid.innerHTML = "";
+      CATALOGO.forEach(p => {
+        const btn = document.createElement("button");
+        btn.className = "bg-brand-card border-2 border-slate-700 active:border-brand-accent p-4 rounded-2xl flex flex-col justify-between text-left shadow-lg active:scale-95 transition";
+        btn.onclick = () => agregarProductoAMesa(p);
+        btn.innerHTML = `
+          <div class="flex justify-between items-start w-full">
+            <span class="font-black text-base text-slate-100">${p.nombre}</span>
+            <span class="text-xl">${p.icono}</span>
+          </div>
+          <span class="font-black text-lg text-brand-accent mt-2">$${p.precio.toFixed(2)}</span>
+        `;
+        grid.appendChild(btn);
+      });
+    }
+
+    // Calcular total de una mesa específica
+    function calcularTotalMesa(nombreMesa) {
+      const items = estadoMesas[nombreMesa]?.items || {};
+      return Object.values(items).reduce((acc, item) => acc + (item.cantidad * item.precio_unitario), 0);
+    }
+
+    // Dibujar pestañas superiores de las 5 ubicaciones (muestra cuáles están ocupadas)
+    function renderizarBarraMesas() {
+      const barra = document.getElementById("barra-mesas");
+      barra.innerHTML = "";
+
+      UBICACIONES.forEach(nombre => {
+        const total = calcularTotalMesa(nombre);
+        const ocupada = total > 0;
+        const esActiva = nombre === mesaActual;
+
+        const btn = document.createElement("button");
+        let estilos = "p-2 rounded-xl text-center border transition flex flex-col items-center justify-center ";
+        
+        if (esActiva) {
+          estilos += "bg-brand-accent text-slate-950 border-brand-accent font-black shadow-md";
+        } else if (ocupada) {
+          estilos += "bg-amber-500/20 text-amber-300 border-amber-500/50 font-bold";
+        } else {
+          estilos += "bg-brand-card text-slate-400 border-slate-800 font-semibold";
+        }
+
+        btn.className = estilos;
+        btn.onclick = () => seleccionarMesa(nombre);
+        btn.innerHTML = `
+          <span class="text-[11px] leading-tight truncate w-full">${nombre}</span>
+          <span class="text-[10px] mt-0.5 ${esActiva ? 'text-slate-900 font-extrabold' : ocupada ? 'text-amber-400' : 'text-slate-500'}">
+            ${ocupada ? '$' + total : 'Libre'}
+          </span>
+        `;
+        barra.appendChild(btn);
+      });
+    }
+
+    // Cambiar entre mesas sin perder los datos
+    function seleccionarMesa(nombre) {
+      mesaActual = nombre;
+      renderizarTodo();
+    }
+
+    // Guardar el estado actual de la mesa en IndexedDB
+    async function persistirMesaActual() {
+      await db.mesas_activas.put(estadoMesas[mesaActual]);
+      renderizarTodo();
+    }
+
+    // Modificar comensales de la mesa seleccionada
+    async function ajustarComensales(delta) {
+      const m = estadoMesas[mesaActual];
+      m.comensales = Math.max(1, m.comensales + delta);
+      await persistirMesaActual();
+    }
+
+    // Anotar producto en la mesa seleccionada
+    async function agregarProductoAMesa(producto) {
+      const m = estadoMesas[mesaActual];
+      if (!m.fecha_apertura) {
+        m.fecha_apertura = new Date().toISOString();
+      }
+
+      if (m.items[producto.id]) {
+        m.items[producto.id].cantidad += 1;
       } else {
-        carrito[producto.id] = {
+        m.items[producto.id] = {
           nombre: producto.nombre,
           precio_unitario: producto.precio,
           cantidad: 1
         };
       }
-      renderizarCarrito();
+      if (navigator.vibrate) navigator.vibrate(25);
+      await persistirMesaActual();
     }
 
-    function cambiarCantidad(id, delta) {
-      if (!carrito[id]) return;
-      carrito[id].cantidad += delta;
-      if (carrito[id].cantidad <= 0) delete carrito[id];
-      renderizarCarrito();
+    // Sumar o restar desde la hoja de pedido
+    async function cambiarCantidadItem(id, delta) {
+      const m = estadoMesas[mesaActual];
+      if (!m.items[id]) return;
+      m.items[id].cantidad += delta;
+      if (m.items[id].cantidad <= 0) {
+        delete m.items[id];
+      }
+      if (Object.keys(m.items).length === 0) {
+        m.fecha_apertura = null;
+      }
+      await persistirMesaActual();
     }
 
-    function limpiarCarrito() {
-      carrito = {};
-      renderizarCarrito();
+    // Cancelar o vaciar cuenta de la mesa actual
+    async function cancelarCuentaMesa() {
+      const total = calcularTotalMesa(mesaActual);
+      if (total === 0) return;
+      if (!confirm(`¿Seguro que deseas borrar el pedido abierto de ${mesaActual}?`)) return;
+
+      estadoMesas[mesaActual] = {
+        mesa_id: mesaActual,
+        comensales: 1,
+        items: {},
+        fecha_apertura: null
+      };
+      await persistirMesaActual();
     }
 
-    function renderizarCarrito() {
-      const contenedor = document.getElementById("lista-carrito");
-      contenedor.innerHTML = "";
-      let granTotal = 0;
+    // Renderizar toda la pantalla de la mesa seleccionada
+    function renderizarTodo() {
+      renderizarBarraMesas();
+      const m = estadoMesas[mesaActual];
 
-      const items = Object.keys(carrito);
-      if (items.length === 0) {
-        contenedor.innerHTML = `<p class="text-xs text-slate-500 italic text-center mt-6">Sin productos en la orden</p>`;
+      document.getElementById("titulo-mesa-actual").innerText = mesaActual;
+      document.getElementById("subtitulo-mesa").innerText = mesaActual;
+      document.getElementById("label-comensales").innerText = m.comensales;
+
+      if (m.fecha_apertura) {
+        const horaAp = new Date(m.fecha_apertura).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        document.getElementById("hora-apertura-label").innerText = `Abierta a las ${horaAp}`;
+      } else {
+        document.getElementById("hora-apertura-label").innerText = "Mesa libre (sin pedido)";
       }
 
-      items.forEach(id => {
-        const item = carrito[id];
-        const subtotal = item.cantidad * item.precio_unitario;
-        granTotal += subtotal;
+      const contenedor = document.getElementById("lista-carrito");
+      contenedor.innerHTML = "";
+      const keys = Object.keys(m.items);
 
+      if (keys.length === 0) {
+        contenedor.innerHTML = `<p class="text-xs text-slate-500 italic text-center mt-6">Toca un producto para abrir o seguir anotando en ${mesaActual}</p>`;
+      }
+
+      keys.forEach(id => {
+        const item = m.items[id];
+        const subtotal = item.cantidad * item.precio_unitario;
         const row = document.createElement("div");
-        row.className = "flex justify-between items-center bg-slate-900/60 p-2 rounded-lg border border-slate-800 text-xs";
+        row.className = "flex justify-between items-center bg-slate-900/70 p-2 rounded-lg border border-slate-800 text-xs";
         row.innerHTML = `
           <div>
             <p class="font-bold text-white">${item.nombre}</p>
             <p class="text-[10px] text-slate-400">$${item.precio_unitario} c/u</p>
           </div>
           <div class="flex items-center gap-2">
-            <button onclick="cambiarCantidad(${id}, -1)" class="w-6 h-6 bg-slate-800 text-brand-accent font-bold rounded flex items-center justify-center">-</button>
-            <span class="font-bold w-4 text-center text-white">${item.cantidad}</span>
-            <button onclick="cambiarCantidad(${id}, 1)" class="w-6 h-6 bg-slate-800 text-brand-accent font-bold rounded flex items-center justify-center">+</button>
-            <span class="font-bold text-slate-200 ml-2 w-12 text-right">$${subtotal}</span>
+            <button onclick="cambiarCantidadItem(${id}, -1)" class="w-6 h-6 bg-slate-800 text-brand-accent font-bold rounded flex items-center justify-center">-</button>
+            <span class="font-bold w-5 text-center text-white">${item.cantidad}</span>
+            <button onclick="cambiarCantidadItem(${id}, 1)" class="w-6 h-6 bg-slate-800 text-brand-accent font-bold rounded flex items-center justify-center">+</button>
+            <span class="font-bold text-slate-200 ml-1 w-14 text-right">$${subtotal}</span>
           </div>
         `;
         contenedor.appendChild(row);
       });
 
+      const granTotal = calcularTotalMesa(mesaActual);
       document.getElementById("label-total").innerText = `$${granTotal.toFixed(2)}`;
     }
 
-    // 4. PERSISTENCIA: COBRO Y REGISTRO EN INDEXEDDB
-    async function cobrarOrden() {
-      const itemsKeys = Object.keys(carrito);
-      if (itemsKeys.length === 0) {
-        alert("Agrega al menos un producto antes de registrar la orden.");
+    // 4. COBRAR Y CERRAR LA MESA (Pasa de mesas_activas a la tabla histórica ordenes)
+    async function cobrarCerrarMesa() {
+      const m = estadoMesas[mesaActual];
+      const keys = Object.keys(m.items);
+
+      if (keys.length === 0) {
+        alert(`No hay productos anotados en ${mesaActual}.`);
         return;
       }
 
-      const total = itemsKeys.reduce((acc, id) => acc + (carrito[id].cantidad * carrito[id].precio_unitario), 0);
-      const productosDetalle = itemsKeys.map(id => ({
+      const total = calcularTotalMesa(mesaActual);
+      const productosDetalle = keys.map(id => ({
         producto_id: parseInt(id),
-        nombre: carrito[id].nombre,
-        precio_unitario: carrito[id].precio_unitario,
-        cantidad: carrito[id].cantidad,
-        subtotal: carrito[id].cantidad * carrito[id].precio_unitario
+        nombre: m.items[id].nombre,
+        precio_unitario: m.items[id].precio_unitario,
+        cantidad: m.items[id].cantidad,
+        subtotal: m.items[id].cantidad * m.items[id].precio_unitario
       }));
 
-      // Documento estructurado listo para SQLite / Databricks
-      const orden = {
-        orden_id: crypto.randomUUID(), // Llave primaria única universal
-        mesa: document.getElementById("select-mesa").value,
-        comensales: comensales,
+      const ordenCerrada = {
+        orden_id: 'ord_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+        mesa: mesaActual,
+        comensales: m.comensales,
         total: total,
         productos: productosDetalle,
-        fecha_cierre: new Date().toISOString(), // Marca de tiempo ISO
-        sync_status: 0 // 0 = Pendiente de enviar a Databricks
+        fecha_apertura: m.fecha_apertura || new Date().toISOString(),
+        fecha_cierre: new Date().toISOString(),
+        sync_status: 0
       };
 
       try {
-        await db.ordenes.add(orden);
-        // Feedback háptico ligero si el móvil lo soporta
-        if (navigator.vibrate) navigator.vibrate(50);
-        limpiarCarrito();
+        // Guardar en historial de ventas cerradas
+        await db.ordenes.add(ordenCerrada);
+
+        // Liberar la mesa para los siguientes clientes
+        estadoMesas[mesaActual] = {
+          mesa_id: mesaActual,
+          comensales: 1,
+          items: {},
+          fecha_apertura: null
+        };
+        await persistirMesaActual();
+
+        if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
       } catch (err) {
-        console.error("Fallo al guardar orden en IndexedDB:", err);
-        alert("Error al registrar en disco local.");
+        console.error("Error al cerrar cuenta:", err);
+        alert("Hubo un error al guardar la venta.");
       }
     }
 
-    // 5. CORTE DIARIO Y MÉTRICAS LOCALES
+    // 5. CORTE DEL DÍA (Lectura de ventas cerradas)
     async function cargarCorteDelDia() {
       const todas = await db.ordenes.toArray();
       const hoyStr = new Date().toISOString().split("T")[0];
-      
-      // Filtrar órdenes cerradas el día de hoy
       const ordenesHoy = todas.filter(o => o.fecha_cierre.startsWith(hoyStr));
 
       let ventaTotal = 0;
@@ -320,16 +451,15 @@
           <td class="p-3 font-mono">${hora}</td>
           <td class="p-3 font-semibold">${o.mesa}</td>
           <td class="p-3">${o.comensales}</td>
-          <td class="p-3 text-slate-400 max-w-xs truncate" title="${resumenProductos}">${resumenProductos}</td>
+          <td class="p-3 text-slate-300 max-w-xs truncate">${resumenProductos}</td>
           <td class="p-3 font-bold text-right text-emerald-400">$${o.total.toFixed(2)}</td>
           <td class="p-3 text-center">
-            <span class="inline-block w-2 h-2 rounded-full ${o.sync_status === 1 ? 'bg-emerald-500' : 'bg-amber-500'}" title="${o.sync_status === 1 ? 'Sincronizado' : 'Local'}"></span>
+            <span class="inline-block w-2 h-2 rounded-full ${o.sync_status === 1 ? 'bg-emerald-500' : 'bg-amber-500'}"></span>
           </td>
         `;
         tbody.appendChild(tr);
       });
 
-      // Actualizar tarjetas de KPI
       document.getElementById("metric-venta-total").innerText = `$${ventaTotal.toFixed(2)}`;
       document.getElementById("metric-total-ordenes").innerText = ordenesHoy.length;
       document.getElementById("metric-total-comensales").innerText = totalComensales;
@@ -337,7 +467,6 @@
       document.getElementById("metric-ticket-promedio").innerText = `$${ticketProm}`;
     }
 
-    // Alternar vistas
     function cambiarVista(vista) {
       const vComanda = document.getElementById("vista-comanda");
       const vCorte = document.getElementById("vista-corte");
@@ -358,16 +487,18 @@
       }
     }
 
-    // Utilidad: Descargar datos guardados en archivo JSON
     async function exportarJSON() {
       const ordenes = await db.ordenes.toArray();
       const blob = new Blob([JSON.stringify(ordenes, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `corte_taqueria_${new Date().toISOString().split("T")[0]}.json`;
+      a.download = `el_jarocho_ventas_${new Date().toISOString().split("T")[0]}.json`;
       a.click();
     }
+
+    // Arrancar aplicación
+    inicializarApp();
   </script>
 </body>
 </html>
