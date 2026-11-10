@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Comandero Taquería</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Dexie.js CDN (IndexedDB Wrapper) -->
+  <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { dark: '#0F172A', card: '#1E293B', accent: '#F59E0B', text: '#F8FAFC' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Desactiva selección de texto para evitar molestias al tocar rápido */
+    * { -webkit-tap-highlight-color: transparent; user-select: none; }
+  </style>
+</head>
+<body class="bg-brand-dark text-brand-text flex flex-col h-screen overflow-hidden font-sans">
+
+  <!-- TOP BAR: Navegación rápida -->
+  <header class="bg-brand-card px-4 py-3 border-b border-slate-700 flex justify-between items-center shrink-0">
+    <div>
+      <h1 class="font-black text-lg tracking-wide text-brand-accent">TAQUERÍA OS</h1>
+      <p class="text-xs text-slate-400">Terminal Móvil v1.0</p>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="cambiarVista('comanda')" id="btn-tab-comanda" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-brand-accent text-slate-900 transition">Comanda</button>
+      <button onclick="cambiarVista('corte')" id="btn-tab-corte" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 transition">Ventas del Día</button>
+    </div>
+  </header>
+
+  <!-- VISTA 1: TOMADOR DE COMANDAS -->
+  <main id="vista-comanda" class="flex-1 flex flex-col md:flex-row overflow-hidden">
+    
+    <!-- Panel Izquierdo: Catálogo y selección de mesa -->
+    <section class="flex-1 flex flex-col p-3 overflow-y-auto">
+      
+      <!-- Controles de Mesa y Comensales -->
+      <div class="grid grid-cols-2 gap-2 mb-3 shrink-0">
+        <div class="bg-brand-card p-2 rounded-xl border border-slate-700">
+          <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Mesa / Ubicación</label>
+          <select id="select-mesa" class="w-full bg-slate-900 text-sm font-semibold rounded-lg p-2 border border-slate-700 text-white focus:outline-none focus:border-brand-accent">
+            <option value="Mesa 1">Mesa 1</option>
+            <option value="Mesa 2">Mesa 2</option>
+            <option value="Mesa 3">Mesa 3</option>
+            <option value="Mesa 4">Mesa 4</option>
+            <option value="Barra 1">Barra 1</option>
+            <option value="Barra 2">Barra 2</option>
+            <option value="Para Llevar">Para Llevar</option>
+          </select>
+        </div>
+
+        <div class="bg-brand-card p-2 rounded-xl border border-slate-700">
+          <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Comensales</label>
+          <div class="flex items-center justify-between bg-slate-900 rounded-lg border border-slate-700 px-2 py-0.5">
+            <button onclick="ajustarComensales(-1)" class="text-lg font-black text-brand-accent p-1">-</button>
+            <span id="label-comensales" class="font-bold text-sm">2</span>
+            <button onclick="ajustarComensales(1)" class="text-lg font-black text-brand-accent p-1">+</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cuadrícula de Productos -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 pb-20 md:pb-0" id="grid-productos">
+        <!-- Renderizado por JS -->
+      </div>
+    </section>
+
+    <!-- Panel Derecho: Carrito y Cierre de Cuenta -->
+    <section class="w-full md:w-80 bg-brand-card border-t md:border-t-0 md:border-l border-slate-700 flex flex-col shrink-0">
+      <div class="p-3 border-b border-slate-700 flex justify-between items-center">
+        <h2 class="font-bold text-sm text-slate-300">Cuenta Activa</h2>
+        <button onclick="limpiarCarrito()" class="text-xs text-red-400 hover:text-red-300 font-semibold">Vaciar</button>
+      </div>
+
+      <!-- Lista de Ítems en Carrito -->
+      <div id="lista-carrito" class="flex-1 overflow-y-auto p-3 space-y-2 max-h-48 md:max-h-full">
+        <!-- Renglones agregados dinámicamente -->
+      </div>
+
+      <!-- Total y Botón de Cobro -->
+      <div class="p-3 bg-slate-900/80 border-t border-slate-700 shrink-0 space-y-2">
+        <div class="flex justify-between items-end">
+          <span class="text-xs text-slate-400 font-medium">Total a Cobrar</span>
+          <span id="label-total" class="text-2xl font-black text-brand-accent">$0.00</span>
+        </div>
+        <button onclick="cobrarOrden()" class="w-full py-3 bg-brand-accent text-slate-950 font-black rounded-xl text-base shadow-lg active:scale-95 transition">
+          REGISTRAR VENTA
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <!-- VISTA 2: VENTAS DEL DÍA (CORTE LOCAL) -->
+  <main id="vista-corte" class="flex-1 flex flex-col p-4 overflow-y-auto hidden">
+    <!-- Métricas Clave del Día -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+      <div class="bg-brand-card p-3 rounded-xl border border-slate-700">
+        <span class="text-[10px] uppercase text-slate-400 font-bold block">Venta Total Hoy</span>
+        <span id="metric-venta-total" class="text-xl font-black text-emerald-400">$0.00</span>
+      </div>
+      <div class="bg-brand-card p-3 rounded-xl border border-slate-700">
+        <span class="text-[10px] uppercase text-slate-400 font-bold block">Comandas</span>
+        <span id="metric-total-ordenes" class="text-xl font-black text-white">0</span>
+      </div>
+      <div class="bg-brand-card p-3 rounded-xl border border-slate-700">
+        <span class="text-[10px] uppercase text-slate-400 font-bold block">Comensales</span>
+        <span id="metric-total-comensales" class="text-xl font-black text-white">0</span>
+      </div>
+      <div class="bg-brand-card p-3 rounded-xl border border-slate-700">
+        <span class="text-[10px] uppercase text-slate-400 font-bold block">Ticket Promedio / Persona</span>
+        <span id="metric-ticket-promedio" class="text-xl font-black text-brand-accent">$0.00</span>
+      </div>
+    </div>
+
+    <!-- Acciones de Datos -->
+    <div class="flex justify-between items-center mb-2">
+      <h3 class="text-sm font-bold text-slate-300">Historial de Órdenes Guardadas</h3>
+      <button onclick="exportarJSON()" class="px-3 py-1 bg-slate-800 text-xs font-bold text-brand-accent border border-slate-700 rounded-lg">
+        Descargar JSON
+      </button>
+    </div>
+
+    <!-- Tabla Detallada -->
+    <div class="bg-brand-card rounded-xl border border-slate-700 flex-1 overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-slate-900/60 text-slate-400 font-bold border-b border-slate-700">
+          <tr>
+            <th class="p-3">Hora</th>
+            <th class="p-3">Mesa</th>
+            <th class="p-3">Pers.</th>
+            <th class="p-3">Productos</th>
+            <th class="p-3 text-right">Total</th>
+            <th class="p-3 text-center">Sync</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-corte-body" class="divide-y divide-slate-800 text-slate-200">
+          <!-- Renglones de la BD -->
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- LÓGICA DE PERSISTENCIA Y APLICACIÓN -->
+  <script>
+    // 1. INICIALIZAR BASE DE DATOS LOCAL (IndexedDB vía Dexie)
+    const db = new Dexie("TaqueriaDB");
+    db.version(1).stores({
+      // Índices clave para búsquedas y sincronización
+      ordenes: "orden_id, fecha_cierre, sync_status"
+    });
+
+    // 2. CATÁLOGO BASE DE PRODUCTOS
+    const CATALOGO = [
+      { id: 1, nombre: "Taco Pastor", precio: 18, cat: "tacos" },
+      { id: 2, nombre: "Taco Suadero", precio: 20, cat: "tacos" },
+      { id: 3, nombre: "Taco Bistec", precio: 22, cat: "tacos" },
+      { id: 4, nombre: "Taco Tripa", precio: 25, cat: "tacos" },
+      { id: 5, nombre: "Gringa Pastor", precio: 45, cat: "especial" },
+      { id: 6, nombre: "Boing Guayaba", precio: 25, cat: "bebidas" },
+      { id: 7, nombre: "Coca-Cola 600ml", precio: 30, cat: "bebidas" },
+      { id: 8, nombre: "Agua de Horchata", precio: 25, cat: "bebidas" }
+    ];
+
+    // 3. ESTADO REACTIVO EN MEMORIA
+    let comensales = 2;
+    let carrito = {}; // Estructura: { producto_id: { nombre, precio, cantidad } }
+
+    // Render inicial del catálogo
+    const grid = document.getElementById("grid-productos");
+    CATALOGO.forEach(p => {
+      const btn = document.createElement("button");
+      btn.className = "bg-brand-card border border-slate-700 active:border-brand-accent p-3 rounded-xl flex flex-col justify-between text-left h-20 shadow active:scale-95 transition";
+      btn.onclick = () => agregarAlCarrito(p);
+      btn.innerHTML = `
+        <span class="font-bold text-xs text-slate-100">${p.nombre}</span>
+        <span class="font-black text-sm text-brand-accent">$${p.precio.toFixed(2)}</span>
+      `;
+      grid.appendChild(btn);
+    });
+
+    // Control de Comensales
+    function ajustarComensales(delta) {
+      comensales = Math.max(1, comensales + delta);
+      document.getElementById("label-comensales").innerText = comensales;
+    }
+
+    // Carrito de compras
+    function agregarAlCarrito(producto) {
+      if (carrito[producto.id]) {
+        carrito[producto.id].cantidad += 1;
+      } else {
+        carrito[producto.id] = {
+          nombre: producto.nombre,
+          precio_unitario: producto.precio,
+          cantidad: 1
+        };
+      }
+      renderizarCarrito();
+    }
+
+    function cambiarCantidad(id, delta) {
+      if (!carrito[id]) return;
+      carrito[id].cantidad += delta;
+      if (carrito[id].cantidad <= 0) delete carrito[id];
+      renderizarCarrito();
+    }
+
+    function limpiarCarrito() {
+      carrito = {};
+      renderizarCarrito();
+    }
+
+    function renderizarCarrito() {
+      const contenedor = document.getElementById("lista-carrito");
+      contenedor.innerHTML = "";
+      let granTotal = 0;
+
+      const items = Object.keys(carrito);
+      if (items.length === 0) {
+        contenedor.innerHTML = `<p class="text-xs text-slate-500 italic text-center mt-6">Sin productos en la orden</p>`;
+      }
+
+      items.forEach(id => {
+        const item = carrito[id];
+        const subtotal = item.cantidad * item.precio_unitario;
+        granTotal += subtotal;
+
+        const row = document.createElement("div");
+        row.className = "flex justify-between items-center bg-slate-900/60 p-2 rounded-lg border border-slate-800 text-xs";
+        row.innerHTML = `
+          <div>
+            <p class="font-bold text-white">${item.nombre}</p>
+            <p class="text-[10px] text-slate-400">$${item.precio_unitario} c/u</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="cambiarCantidad(${id}, -1)" class="w-6 h-6 bg-slate-800 text-brand-accent font-bold rounded flex items-center justify-center">-</button>
+            <span class="font-bold w-4 text-center text-white">${item.cantidad}</span>
+            <button onclick="cambiarCantidad(${id}, 1)" class="w-6 h-6 bg-slate-800 text-brand-accent font-bold rounded flex items-center justify-center">+</button>
+            <span class="font-bold text-slate-200 ml-2 w-12 text-right">$${subtotal}</span>
+          </div>
+        `;
+        contenedor.appendChild(row);
+      });
+
+      document.getElementById("label-total").innerText = `$${granTotal.toFixed(2)}`;
+    }
+
+    // 4. PERSISTENCIA: COBRO Y REGISTRO EN INDEXEDDB
+    async function cobrarOrden() {
+      const itemsKeys = Object.keys(carrito);
+      if (itemsKeys.length === 0) {
+        alert("Agrega al menos un producto antes de registrar la orden.");
+        return;
+      }
+
+      const total = itemsKeys.reduce((acc, id) => acc + (carrito[id].cantidad * carrito[id].precio_unitario), 0);
+      const productosDetalle = itemsKeys.map(id => ({
+        producto_id: parseInt(id),
+        nombre: carrito[id].nombre,
+        precio_unitario: carrito[id].precio_unitario,
+        cantidad: carrito[id].cantidad,
+        subtotal: carrito[id].cantidad * carrito[id].precio_unitario
+      }));
+
+      // Documento estructurado listo para SQLite / Databricks
+      const orden = {
+        orden_id: crypto.randomUUID(), // Llave primaria única universal
+        mesa: document.getElementById("select-mesa").value,
+        comensales: comensales,
+        total: total,
+        productos: productosDetalle,
+        fecha_cierre: new Date().toISOString(), // Marca de tiempo ISO
+        sync_status: 0 // 0 = Pendiente de enviar a Databricks
+      };
+
+      try {
+        await db.ordenes.add(orden);
+        // Feedback háptico ligero si el móvil lo soporta
+        if (navigator.vibrate) navigator.vibrate(50);
+        limpiarCarrito();
+      } catch (err) {
+        console.error("Fallo al guardar orden en IndexedDB:", err);
+        alert("Error al registrar en disco local.");
+      }
+    }
+
+    // 5. CORTE DIARIO Y MÉTRICAS LOCALES
+    async function cargarCorteDelDia() {
+      const todas = await db.ordenes.toArray();
+      const hoyStr = new Date().toISOString().split("T")[0];
+      
+      // Filtrar órdenes cerradas el día de hoy
+      const ordenesHoy = todas.filter(o => o.fecha_cierre.startsWith(hoyStr));
+
+      let ventaTotal = 0;
+      let totalComensales = 0;
+
+      const tbody = document.getElementById("tabla-corte-body");
+      tbody.innerHTML = "";
+
+      ordenesHoy.reverse().forEach(o => {
+        ventaTotal += o.total;
+        totalComensales += o.comensales;
+
+        const hora = new Date(o.fecha_cierre).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const resumenProductos = o.productos.map(p => `${p.cantidad}x ${p.nombre}`).join(", ");
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="p-3 font-mono">${hora}</td>
+          <td class="p-3 font-semibold">${o.mesa}</td>
+          <td class="p-3">${o.comensales}</td>
+          <td class="p-3 text-slate-400 max-w-xs truncate" title="${resumenProductos}">${resumenProductos}</td>
+          <td class="p-3 font-bold text-right text-emerald-400">$${o.total.toFixed(2)}</td>
+          <td class="p-3 text-center">
+            <span class="inline-block w-2 h-2 rounded-full ${o.sync_status === 1 ? 'bg-emerald-500' : 'bg-amber-500'}" title="${o.sync_status === 1 ? 'Sincronizado' : 'Local'}"></span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Actualizar tarjetas de KPI
+      document.getElementById("metric-venta-total").innerText = `$${ventaTotal.toFixed(2)}`;
+      document.getElementById("metric-total-ordenes").innerText = ordenesHoy.length;
+      document.getElementById("metric-total-comensales").innerText = totalComensales;
+      const ticketProm = totalComensales > 0 ? (ventaTotal / totalComensales).toFixed(2) : "0.00";
+      document.getElementById("metric-ticket-promedio").innerText = `$${ticketProm}`;
+    }
+
+    // Alternar vistas
+    function cambiarVista(vista) {
+      const vComanda = document.getElementById("vista-comanda");
+      const vCorte = document.getElementById("vista-corte");
+      const bComanda = document.getElementById("btn-tab-comanda");
+      const bCorte = document.getElementById("btn-tab-corte");
+
+      if (vista === 'comanda') {
+        vComanda.classList.remove("hidden");
+        vCorte.classList.add("hidden");
+        bComanda.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-brand-accent text-slate-900 transition";
+        bCorte.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 transition";
+      } else {
+        vComanda.classList.add("hidden");
+        vCorte.classList.remove("hidden");
+        bCorte.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-brand-accent text-slate-900 transition";
+        bComanda.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 transition";
+        cargarCorteDelDia();
+      }
+    }
+
+    // Utilidad: Descargar datos guardados en archivo JSON
+    async function exportarJSON() {
+      const ordenes = await db.ordenes.toArray();
+      const blob = new Blob([JSON.stringify(ordenes, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `corte_taqueria_${new Date().toISOString().split("T")[0]}.json`;
+      a.click();
+    }
+  </script>
+</body>
+</html>
