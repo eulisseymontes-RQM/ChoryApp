@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jarocho-pos-v2';
+const CACHE_NAME = 'jarocho-pos-v3';
 const ASSETS = [
   './',
   './index.html',
