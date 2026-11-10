@@ -1,0 +1,18 @@
+{
+  "name": "Carnitas El Jarocho - Comandero",
+  "short_name": "El Jarocho",
+  "description": "Sistema de comandas offline para Carnitas El Jarocho",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0F172A",
+  "theme_color": "#F59E0B",
+  "icons": [
+    {
+      "src": "./icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
