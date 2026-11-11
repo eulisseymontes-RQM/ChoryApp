@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Carnitas El Jarocho - POS v3</title>
+  <title>Carnitas El Jarocho - POS v3.1</title>
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#F59E0B">
   <link rel="apple-touch-icon" href="./icon.png">
@@ -46,9 +46,9 @@
 
   <!-- ================= VISTA 1: COMANDERO MULTIMESA ================= -->
   <main id="vista-comanda" class="flex-1 flex flex-col overflow-hidden">
-    <!-- Barra de 5 Ubicaciones -->
+    <!-- Barra de 7 Ubicaciones (Mesas 1 a 6 + Para Llevar) -->
     <div class="bg-slate-900/90 px-2.5 py-2 border-b border-slate-800 shrink-0">
-      <div class="grid grid-cols-5 gap-1.5" id="barra-mesas"></div>
+      <div class="grid grid-cols-4 sm:grid-cols-7 gap-1.5" id="barra-mesas"></div>
     </div>
 
     <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
@@ -100,7 +100,6 @@
 
   <!-- ================= VISTA 2: CIERRE DEL DÍA Y ENVÍO A DATABRICKS ================= -->
   <main id="vista-corte" class="flex-1 flex flex-col p-3 overflow-y-auto hidden">
-    <!-- Selector de Fecha Operativa (Permite ver hoy o días anteriores guardados en el cel) -->
     <div class="flex justify-between items-center bg-brand-card p-2.5 rounded-xl border border-slate-700 mb-3">
       <div>
         <span class="text-[10px] uppercase text-slate-400 font-bold block">Fecha Operativa Local</span>
@@ -154,7 +153,7 @@
     </div>
   </main>
 
-  <!-- ================= VISTA 3: ANALÍTICA HISTÓRICA (DESDE DATABRICKS) ================= -->
+  <!-- ================= VISTA 3: ANALÍTICA HISTÓRICA ================= -->
   <main id="vista-analitica" class="flex-1 flex flex-col p-3 overflow-y-auto hidden space-y-3">
     <div class="bg-brand-card p-3 rounded-xl border border-slate-700 flex justify-between items-center">
       <div>
@@ -166,51 +165,61 @@
       </button>
     </div>
 
-    <!-- Alertas Automáticas (Generadas desde tus reglas en Databricks o Local) -->
     <div id="contenedor-alertas" class="space-y-2"></div>
-
-    <!-- Resumen Histórico -->
     <div class="grid grid-cols-2 gap-2.5" id="grid-kpis-historicos"></div>
 
-    <!-- Desglose de Productos Acumulado -->
     <div class="bg-brand-card p-3 rounded-xl border border-slate-700">
       <h3 class="text-xs font-bold uppercase text-slate-400 mb-2">Volumen Acumulado por Producto</h3>
       <div id="lista-ranking-productos" class="space-y-2 text-xs"></div>
     </div>
   </main>
 
-  <!-- ================= MODAL 1: FRACCIONES DE KILO DE CARNITAS ($280/Kg) ================= -->
+  <!-- ================= MODAL 1: SELECTOR ACUMULADOR DE CARNITAS ($340/Kg) ================= -->
   <div id="modal-kilo" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50">
-    <div class="bg-brand-card border border-slate-700 rounded-2xl w-full max-w-sm p-4 space-y-4">
-      <div class="flex justify-between items-center">
-        <h3 class="font-black text-base text-brand-accent">Carnitas por Kilo ($280/Kg)</h3>
-        <button onclick="cerrarModalKilo()" class="text-slate-400 font-bold text-lg">✕</button>
+    <div class="bg-brand-card border border-slate-700 rounded-2xl w-full max-w-sm p-4 space-y-3.5">
+      <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+        <div>
+          <h3 class="font-black text-base text-brand-accent">Carnitas por Kilo</h3>
+          <p class="text-[11px] text-slate-400">Precio base: $340.00 / Kg</p>
+        </div>
+        <button onclick="cerrarModalKilo()" class="text-slate-400 font-bold text-lg px-2">✕</button>
       </div>
-      <div class="grid grid-cols-2 gap-2.5">
-        <button onclick="confirmarKilo(0.25, '1/4 Kg Carnitas', 70)" class="p-3 bg-slate-800 hover:bg-slate-700 rounded-xl border border-slate-600 text-left">
-          <span class="font-black text-sm block text-white">1/4 Kg (250g)</span>
-          <span class="text-brand-accent font-bold text-xs">$70.00</span>
-        </button>
-        <button onclick="confirmarKilo(0.5, '1/2 Kg Carnitas', 140)" class="p-3 bg-slate-800 hover:bg-slate-700 rounded-xl border border-slate-600 text-left">
-          <span class="font-black text-sm block text-white">1/2 Kg (500g)</span>
-          <span class="text-brand-accent font-bold text-xs">$140.00</span>
-        </button>
-        <button onclick="confirmarKilo(0.75, '3/4 Kg Carnitas', 210)" class="p-3 bg-slate-800 hover:bg-slate-700 rounded-xl border border-slate-600 text-left">
-          <span class="font-black text-sm block text-white">3/4 Kg (750g)</span>
-          <span class="text-brand-accent font-bold text-xs">$210.00</span>
-        </button>
-        <button onclick="confirmarKilo(1.0, '1 Kg Carnitas', 280)" class="p-3 bg-slate-800 hover:bg-slate-700 rounded-xl border border-slate-600 text-left">
-          <span class="font-black text-sm block text-white">1 Kilo Completo</span>
-          <span class="text-brand-accent font-bold text-xs">$280.00</span>
-        </button>
-      </div>
-      <div class="border-t border-slate-700 pt-3">
-        <label class="text-[11px] text-slate-400 font-bold block mb-1">O pedir por monto exacto en pesos ($):</label>
-        <div class="flex gap-2">
-          <input type="number" id="input-monto-carnitas" placeholder="Ej. 100" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold text-sm">
-          <button onclick="confirmarMontoLibreCarnitas()" class="px-4 py-2 bg-brand-accent text-slate-950 font-black rounded-xl text-xs">Agregar</button>
+
+      <!-- Control Principal de Kilos (Permite escribir 8 directo o usar +/-) -->
+      <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-xs font-bold text-slate-300">Cantidad en Kilos (Kg):</span>
+          <button onclick="setearKilosModal(0)" class="text-[11px] text-red-400 font-bold">Reiniciar a 0</button>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="sumarKilosModal(-1)" class="w-12 h-11 bg-slate-800 rounded-xl font-black text-base text-brand-accent border border-slate-700 active:scale-95">-1</button>
+          <input type="number" step="0.25" id="input-kilos-modal" oninput="recalcularDesdeKilosModal()" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl h-11 text-center font-black text-xl text-white focus:outline-none focus:border-brand-accent" value="1">
+          <button onclick="sumarKilosModal(1)" class="w-12 h-11 bg-slate-800 rounded-xl font-black text-base text-brand-accent border border-slate-700 active:scale-95">+1</button>
+        </div>
+
+        <!-- Botones para sumar fracciones rápido -->
+        <div class="grid grid-cols-3 gap-1.5 mt-2.5">
+          <button onclick="sumarKilosModal(0.25)" class="py-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-600 text-xs font-bold text-white active:scale-95">
+            + 1/4 Kg <span class="block text-[10px] text-brand-accent">+$85</span>
+          </button>
+          <button onclick="sumarKilosModal(0.5)" class="py-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-600 text-xs font-bold text-white active:scale-95">
+            + 1/2 Kg <span class="block text-[10px] text-brand-accent">+$170</span>
+          </button>
+          <button onclick="sumarKilosModal(0.75)" class="py-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-600 text-xs font-bold text-white active:scale-95">
+            + 3/4 Kg <span class="block text-[10px] text-brand-accent">+$255</span>
+          </button>
         </div>
       </div>
+
+      <!-- O pedir por monto en pesos -->
+      <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between gap-2">
+        <span class="text-xs text-slate-300 font-bold">Total a cobrar ($):</span>
+        <input type="number" id="input-pesos-carnitas-modal" oninput="recalcularDesdePesosModal()" class="w-32 bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-right font-black text-lg text-emerald-400 focus:outline-none focus:border-brand-accent" value="340">
+      </div>
+
+      <button onclick="confirmarCarnitasAcumuladas()" class="w-full py-3.5 bg-brand-accent text-slate-950 font-black rounded-xl text-sm shadow-lg active:scale-95 transition">
+        AGREGAR A LA CUENTA
+      </button>
     </div>
   </div>
 
@@ -230,7 +239,6 @@
         <span id="cobro-total-pagar" class="text-2xl font-black text-brand-accent">$0.00</span>
       </div>
 
-      <!-- Botones rápidos de billetes mexicanos -->
       <div>
         <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1.5">Pago rápido con billete:</span>
         <div class="grid grid-cols-5 gap-1.5">
@@ -259,8 +267,10 @@
   </div>
 
   <script>
+    const PRECIO_KILO_CARNITAS = 340;
+
     // =========================================================================
-    // 1. IDENTIDAD ÚNICA DEL DISPOSITIVO (Para rastreo multi-teléfono en JSON)
+    // 1. IDENTIDAD ÚNICA DEL DISPOSITIVO
     // =========================================================================
     function obtenerMetadataDispositivo() {
       let deviceId = localStorage.getItem("jarocho_device_id");
@@ -284,7 +294,6 @@
       };
     }
 
-    // Permite tocar el encabezado para cambiar el nombre del teléfono y URL de sincronización
     function configurarDispositivo() {
       const actualAlias = localStorage.getItem("jarocho_device_alias") || "Terminal 1";
       const nuevoAlias = prompt("Nombre de este teléfono (ej. Mesero 1, Caja):", actualAlias);
@@ -293,21 +302,20 @@
       }
 
       const actualEndpoint = localStorage.getItem("jarocho_sync_url") || "";
-      const nuevoEndpoint = prompt("URL del Webhook / Worker hacia Databricks (opcional):", actualEndpoint);
+      const nuevoEndpoint = prompt("URL del Worker de Cloudflare hacia Databricks:", actualEndpoint);
       if (nuevoEndpoint !== null) {
         localStorage.setItem("jarocho_sync_url", nuevoEndpoint.trim());
       }
       obtenerMetadataDispositivo();
     }
 
-    // Función auxiliar para obtener la fecha local exacta (YYYY-MM-DD en CDMX, no UTC)
     function obtenerFechaLocalISO(dateObj = new Date()) {
       const offset = dateObj.getTimezoneOffset() * 60000;
       return new Date(dateObj.getTime() - offset).toISOString().split("T")[0];
     }
 
     // =========================================================================
-    // 2. BASE DE DATOS LOCAL (IndexedDB)
+    // 2. BASE DE DATOS LOCAL E INICIALIZACIÓN DE 6 MESAS + PARA LLEVAR
     // =========================================================================
     const db = new Dexie("ElJarochoDB_v3");
     db.version(1).stores({
@@ -315,14 +323,16 @@
       ordenes: "orden_id, fecha_operativa, fecha_cierre, sync_status"
     });
 
-    const UBICACIONES = ["Mesa 1", "Mesa 2", "Mesa 3", "Mesa 4", "Para Llevar"];
+    const UBICACIONES = [
+      "Mesa 1", "Mesa 2", "Mesa 3", "Mesa 4", "Mesa 5", "Mesa 6", "Para Llevar"
+    ];
 
     const CATALOGO = [
       { id: 1, nombre: "Tacos", precio: 28, icono: "🌮", tipo: "unitario" },
-      { id: 2, nombre: "Tortas", precio: 40, icono: "🥖", tipo: "unitario" },
-      { id: 3, nombre: "Gorditas", precio: 35, icono: "🫓", tipo: "unitario" },
+      { id: 2, nombre: "Tortas", precio: 50, icono: "🥖", tipo: "unitario" },
+      { id: 3, nombre: "Gorditas", precio: 40, icono: "🫓", tipo: "unitario" },
       { id: 4, nombre: "Refrescos", precio: 28, icono: "🥤", tipo: "unitario" },
-      { id: 5, nombre: "Carnitas x Kg", precio: 280, icono: "⚖️", tipo: "pesable" }
+      { id: 5, nombre: "Carnitas x Kg", precio: PRECIO_KILO_CARNITAS, icono: "⚖️", tipo: "pesable" }
     ];
 
     let mesaActual = "Mesa 1";
@@ -346,14 +356,13 @@
     }
 
     // =========================================================================
-    // 3. INTERFAZ DEL COMANDERO Y MANEJO DE KILOS
+    // 3. INTERFAZ DEL COMANDERO Y NUEVO MODAL ACUMULADOR DE KILOS
     // =========================================================================
     function renderizarCatalogo() {
       const grid = document.getElementById("grid-productos");
       grid.innerHTML = "";
       CATALOGO.forEach((p, idx) => {
         const btn = document.createElement("button");
-        // Si es el 5to ítem (Carnitas x Kg), ocupa las 2 columnas para destacar
         const spanClass = idx === 4 ? "col-span-2 bg-amber-500/10 border-amber-500/60" : "bg-brand-card border-slate-700";
         btn.className = `${spanClass} border-2 active:border-brand-accent p-3.5 rounded-2xl flex justify-between items-center text-left shadow-lg active:scale-95 transition`;
         btn.onclick = () => {
@@ -375,7 +384,7 @@
     }
 
     function abrirModalKilo() {
-      document.getElementById("input-monto-carnitas").value = "";
+      setearKilosModal(1);
       document.getElementById("modal-kilo").classList.remove("hidden");
       document.getElementById("modal-kilo").classList.add("flex");
     }
@@ -385,19 +394,40 @@
       document.getElementById("modal-kilo").classList.remove("flex");
     }
 
-    function confirmarKilo(fraccionKg, etiquetaNombre, subtotalPrecio) {
-      // Usamos una llave compuesta para que fracciones distintas se listen claro
-      const keyItem = `5_${etiquetaNombre.replace(/\s+/g, '')}`;
-      agregarItemAMesa(keyItem, etiquetaNombre, subtotalPrecio, 1, fraccionKg);
-      cerrarModalKilo();
+    function setearKilosModal(kg) {
+      const limpio = Math.max(0, Number(kg.toFixed(3)));
+      document.getElementById("input-kilos-modal").value = limpio;
+      document.getElementById("input-pesos-carnitas-modal").value = Math.round(limpio * PRECIO_KILO_CARNITAS);
     }
 
-    function confirmarMontoLibreCarnitas() {
-      const monto = parseFloat(document.getElementById("input-monto-carnitas").value);
-      if (!monto || monto <= 0) return;
-      const equivalenteKg = Number((monto / 280).toFixed(3));
-      const keyItem = `5_libre_${monto}`;
-      agregarItemAMesa(keyItem, `Carnitas ($${monto})`, monto, 1, equivalenteKg);
+    function sumarKilosModal(deltaKg) {
+      const actual = parseFloat(document.getElementById("input-kilos-modal").value) || 0;
+      setearKilosModal(actual + deltaKg);
+    }
+
+    function recalcularDesdeKilosModal() {
+      const kg = parseFloat(document.getElementById("input-kilos-modal").value) || 0;
+      document.getElementById("input-pesos-carnitas-modal").value = Math.round(kg * PRECIO_KILO_CARNITAS);
+    }
+
+    function recalcularDesdePesosModal() {
+      const pesos = parseFloat(document.getElementById("input-pesos-carnitas-modal").value) || 0;
+      const kg = Number((pesos / PRECIO_KILO_CARNITAS).toFixed(3));
+      document.getElementById("input-kilos-modal").value = kg;
+    }
+
+    async function confirmarCarnitasAcumuladas() {
+      const kg = parseFloat(document.getElementById("input-kilos-modal").value) || 0;
+      const pesos = parseFloat(document.getElementById("input-pesos-carnitas-modal").value) || 0;
+
+      if (kg <= 0 || pesos <= 0) {
+        alert("Ingresa una cantidad válida de carnitas.");
+        return;
+      }
+
+      const etiqueta = `Carnitas (${kg} Kg)`;
+      const keyItem = `5_kg_${kg}_${pesos}`;
+      await agregarItemAMesa(keyItem, etiqueta, pesos, 1, kg);
       cerrarModalKilo();
     }
 
@@ -466,7 +496,7 @@
         const esActiva = nombre === mesaActual;
 
         const btn = document.createElement("button");
-        let estilos = "p-2 rounded-xl text-center border transition flex flex-col items-center justify-center ";
+        let estilos = "p-1.5 rounded-xl text-center border transition flex flex-col items-center justify-center ";
         if (esActiva) estilos += "bg-brand-accent text-slate-950 border-brand-accent font-black shadow";
         else if (ocupada) estilos += "bg-amber-500/20 text-amber-300 border-amber-500/50 font-bold";
         else estilos += "bg-brand-card text-slate-400 border-slate-800 font-semibold";
@@ -529,7 +559,7 @@
     }
 
     // =========================================================================
-    // 4. MODAL CALCULADORA DE CAMBIO Y REGISTRO CON METADATA DE DISPOSITIVO
+    // 4. MODAL CALCULADORA DE CAMBIO Y REGISTRO
     // =========================================================================
     function abrirModalCobro() {
       const total = calcularTotalMesa(mesaActual);
@@ -591,7 +621,6 @@
         subtotal: item.cantidad * item.precio_unitario
       }));
 
-      // Registro completo con trazabilidad de dispositivo y fecha operativa local
       const ordenCerrada = {
         orden_id: `ord_${ahora.getTime()}_${deviceMeta.device_id}`,
         fecha_operativa: obtenerFechaLocalISO(ahora),
@@ -609,7 +638,6 @@
 
       await db.ordenes.add(ordenCerrada);
 
-      // Liberar mesa
       estadoMesas[mesaActual] = { mesa_id: mesaActual, comensales: 1, items: {}, fecha_apertura: null };
       await persistirMesaActual();
       cerrarModalCobro();
@@ -617,7 +645,7 @@
     }
 
     // =========================================================================
-    // 5. CORTE DEL DÍA Y ENVÍO A DATABRICKS
+    // 5. CORTE DEL DÍA Y ENVÍO A DATABRICKS CON DIAGNÓSTICO DETALLADO
     // =========================================================================
     async function cargarCorteDelDia() {
       const fechaSeleccionada = document.getElementById("input-fecha-corte").value || obtenerFechaLocalISO();
@@ -662,7 +690,6 @@
       document.getElementById("metric-ticket-promedio").innerText = `$${ticketProm}`;
     }
 
-    // Construye el paquete JSON de Cierre con Metadata de Dispositivo
     async function construirPayloadCierre(ordenesAEnviar) {
       const deviceMeta = obtenerMetadataDispositivo();
       const fechaCorte = document.getElementById("input-fecha-corte").value || obtenerFechaLocalISO();
@@ -696,7 +723,7 @@
       const payload = await construirPayloadCierre(pendientes);
 
       if (!syncUrl) {
-        alert("Aún no configuras la URL de tu Worker de Databricks (tócalo arriba a la izquierda en 'EL JAROCHO'). Se descargará el archivo JSON de cierre listo para subir a tu volumen de Databricks.");
+        alert("No has configurado la URL del Worker (toca arriba a la izquierda en 'EL JAROCHO'). Se descargará el JSON manualmente.");
         descargarBlobJSON(payload, `cierre_${payload.batch_id}.json`);
         return;
       }
@@ -712,15 +739,17 @@
           body: JSON.stringify(payload)
         });
 
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const textoRespuesta = await res.text();
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${textoRespuesta}`);
+        }
 
-        // Marcar como sincronizadas en IndexedDB
         const ids = pendientes.map(o => o.orden_id);
         await db.ordenes.where("orden_id").anyOf(ids).modify({ sync_status: 1 });
         alert(`✅ ${pendientes.length} órdenes enviadas exitosamente a Databricks.`);
         cargarCorteDelDia();
       } catch (err) {
-        alert("No se pudo conectar al servidor. Puedes descargar el JSON manualmente.");
+        alert(`❌ Falló el envío:\n${err.message}\n\nRevisa que la URL empiece con https:// y verifica tus variables en Cloudflare.`);
         console.error(err);
       } finally {
         btn.innerText = "☁️ Enviar Cierre a Databricks";
@@ -745,22 +774,18 @@
     }
 
     // =========================================================================
-    // 6. PESTAÑA ANALÍTICA (HISTÓRICO Y ALERTAS DE DATABRICKS)
+    // 6. PESTAÑA ANALÍTICA
     // =========================================================================
     async function cargarAnaliticaHistorica() {
       const todas = await db.ordenes.toArray();
-      
-      // Agrupación histórica local + soporte para leer un archivo externo ./databricks_gold.json si lo publicas en el repo
       const diasSet = new Set(todas.map(o => o.fecha_operativa));
       const numDias = Math.max(1, diasSet.size);
       const ventaHistorica = todas.reduce((acc, o) => acc + o.total, 0);
       const promedioDiario = ventaHistorica / numDias;
 
-      // Ventas de hoy para comparar contra el promedio histórico (Alerta de rendimiento)
       const hoyISO = obtenerFechaLocalISO();
       const ventaHoy = todas.filter(o => o.fecha_operativa === hoyISO).reduce((acc, o) => acc + o.total, 0);
 
-      // Ranking y kilos de carnitas vendidos
       const conteoProductos = {};
       let kilosCarnitasVendidos = 0;
 
@@ -771,16 +796,13 @@
         });
       });
 
-      // Renderizar Alertas Inteligentes
-      const divAlertas = document.getElementById("contenedor-alertas");
-      divAlertas.innerHTML = `
+      document.getElementById("contenedor-alertas").innerHTML = `
         <div class="p-3 rounded-xl border ${ventaHoy >= promedioDiario ? 'bg-emerald-950/40 border-emerald-600/50 text-emerald-300' : 'bg-amber-950/40 border-amber-600/50 text-amber-300'} text-xs">
           <span class="font-black block">⚡ Alerta de Ritmo de Venta (Hoy vs Promedio)</span>
           Hoy llevas <b>$${ventaHoy.toFixed(2)}</b>. El promedio diario histórico en este dispositivo es de <b>$${promedioDiario.toFixed(2)}</b> (${numDias} días registrados).
         </div>
       `;
 
-      // Renderizar KPIs Históricos
       document.getElementById("grid-kpis-historicos").innerHTML = `
         <div class="bg-brand-card p-3 rounded-xl border border-slate-700">
           <span class="text-[10px] uppercase text-slate-400 font-bold block">Venta Histórica Acumulada</span>
@@ -792,7 +814,6 @@
         </div>
       `;
 
-      // Renderizar Ranking de Productos
       const divRanking = document.getElementById("lista-ranking-productos");
       divRanking.innerHTML = "";
       Object.entries(conteoProductos)
