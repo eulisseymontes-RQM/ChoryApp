@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Carnitas El Jarocho - POS v3.1</title>
+  <title>Carnitas El Jarocho - POS v4.0</title>
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#F59E0B">
   <link rel="apple-touch-icon" href="./icon.png">
@@ -38,114 +38,158 @@
       </div>
     </div>
     <div class="flex gap-1.5">
-      <button onclick="cambiarVista('comanda')" id="btn-tab-comanda" class="px-2.5 py-1.5 text-xs font-bold rounded-lg bg-brand-accent text-slate-900 transition">Mesas</button>
-      <button onclick="cambiarVista('corte')" id="btn-tab-corte" class="px-2.5 py-1.5 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 transition">Cierre Hoy</button>
-      <button onclick="cambiarVista('analitica')" id="btn-tab-analitica" class="px-2.5 py-1.5 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 transition">Analítica</button>
+      <button onclick="irAMapaMesas()" id="btn-tab-comanda" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-brand-accent text-slate-900 transition">Mesas</button>
+      <button onclick="cambiarVista('corte')" id="btn-tab-corte" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 transition">Cierre Hoy</button>
+      <button onclick="cambiarVista('analitica')" id="btn-tab-analitica" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 transition">Analítica</button>
     </div>
   </header>
 
-  <!-- ================= VISTA 1: COMANDERO MULTIMESA ================= -->
+  <!-- ================= VISTA 1: SALÓN 2D Y ORDEN DE MESA (50/50) ================= -->
   <main id="vista-comanda" class="flex-1 flex flex-col overflow-hidden">
-    <!-- Barra de 7 Ubicaciones (Mesas 1 a 6 + Para Llevar) -->
-    <div class="bg-slate-900/90 px-2.5 py-2 border-b border-slate-800 shrink-0">
-      <div class="grid grid-cols-4 sm:grid-cols-7 gap-1.5" id="barra-mesas"></div>
-    </div>
 
-    <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
-      <!-- Panel Izquierdo: Comensales y Catálogo -->
-      <section class="flex-1 flex flex-col p-3 overflow-y-auto">
-        <div class="bg-brand-card p-2.5 rounded-xl border border-slate-700 flex justify-between items-center mb-3 shrink-0">
-          <div>
-            <span class="text-[10px] uppercase font-bold text-slate-400 block">Anotando en:</span>
-            <span id="titulo-mesa-actual" class="text-base font-black text-brand-accent">Mesa 1</span>
-          </div>
+    <!-- SUB-VISTA 1A: MAPA AÉREO 2D DEL SALÓN -->
+    <section id="subvista-mapa-salon" class="flex-1 flex flex-col p-3 overflow-hidden">
+      <div class="flex justify-between items-center mb-2 shrink-0 px-1">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Plano del Salón (Toca una ubicación)</span>
+        <span id="resumen-salon-activo" class="text-xs font-black text-brand-accent">En mesas: $0.00</span>
+      </div>
+
+      <!-- RECTÁNGULO DELIMITADOR DEL SALÓN (6 Filas proporcionales para respetar el primer 1/6) -->
+      <div class="flex-1 border-2 border-slate-700/80 rounded-2xl bg-slate-900/50 p-3 grid grid-rows-6 grid-cols-2 gap-2.5 relative shadow-inner">
+        
+        <!-- Fila 1 (Primer 1/6 superior): Dos cuadrados Para Llevar centrados arriba -->
+        <div class="col-span-2 row-span-1 flex justify-center items-stretch gap-3 px-4 pb-1 border-b border-dashed border-slate-800">
+          <div id="slot-llevar-1" class="w-1/2 max-w-[150px] flex"></div>
+          <div id="slot-llevar-2" class="w-1/2 max-w-[150px] flex"></div>
+        </div>
+
+        <!-- Fila 2 (Empieza después del 1/6): Izquierda vacía | Derecha Mesa 1 -->
+        <div class="col-start-1 row-start-2 flex items-center justify-center pointer-events-none">
+          <span class="text-[10px] uppercase tracking-widest text-slate-700 font-bold rotate-[-90deg] sm:rotate-0">Acceso / Pasillo</span>
+        </div>
+        <div id="slot-mesa-1" class="col-start-2 row-start-2 flex"></div>
+
+        <!-- Fila 3: Izquierda vacía | Derecha Mesa 2 -->
+        <div class="col-start-1 row-start-3"></div>
+        <div id="slot-mesa-2" class="col-start-2 row-start-3 flex"></div>
+
+        <!-- Fila 4: Izquierda Mesa 5 | Derecha Mesa 3 (Misma altura) -->
+        <div id="slot-mesa-5" class="col-start-1 row-start-4 flex"></div>
+        <div id="slot-mesa-3" class="col-start-2 row-start-4 flex"></div>
+
+        <!-- Fila 5: Izquierda Mesa 6 | Derecha Mesa 4 (Misma altura) -->
+        <div id="slot-mesa-6" class="col-start-1 row-start-5 flex"></div>
+        <div id="slot-mesa-4" class="col-start-2 row-start-5 flex"></div>
+
+        <!-- Fila 6: Margen inferior de referencia del salón -->
+        <div class="col-span-2 row-start-6 flex items-center justify-between px-3 text-[10px] text-slate-600 font-semibold border-t border-dashed border-slate-800/70">
+          <span>Lado Izquierdo (Mesas 5-6)</span>
+          <span>Lado Derecho (Mesas 1-4)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SUB-VISTA 1B: CAPTURA DE ORDEN DE LA MESA (DIVISIÓN EXACTA 50% / 50%) -->
+    <section id="subvista-orden-mesa" class="flex-1 flex flex-col overflow-hidden hidden">
+      
+      <!-- MITAD SUPERIOR (50%): Cabecera de Mesa, Comensales y Productos -->
+      <div class="h-1/2 flex flex-col p-2.5 overflow-y-auto border-b-2 border-slate-700 bg-brand-dark">
+        <!-- Barra de control de la mesa activa -->
+        <div class="bg-brand-card p-2 rounded-xl border border-slate-700 flex justify-between items-center mb-2 shrink-0">
           <div class="flex items-center gap-2">
-            <span class="text-xs font-bold text-slate-300">Comensales:</span>
-            <div class="flex items-center bg-slate-900 rounded-lg border border-slate-700 px-2 py-1 gap-3">
-              <button onclick="ajustarComensales(-1)" class="w-7 h-7 bg-slate-800 rounded text-lg font-black text-brand-accent flex items-center justify-center active:scale-90">-</button>
-              <span id="label-comensales" class="font-black text-sm w-4 text-center">1</span>
-              <button onclick="ajustarComensales(1)" class="w-7 h-7 bg-slate-800 rounded text-lg font-black text-brand-accent flex items-center justify-center active:scale-90">+</button>
+            <button onclick="irAMapaMesas()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-black border border-slate-600 active:scale-95">
+              ← Salón
+            </button>
+            <div>
+              <span id="titulo-mesa-actual" class="text-sm font-black text-brand-accent block leading-none">Mesa 1</span>
+              <span id="hora-apertura-label" class="text-[10px] text-slate-400">Mesa libre</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-1.5">
+            <span class="text-[11px] font-bold text-slate-300">Pers:</span>
+            <div class="flex items-center bg-slate-900 rounded-lg border border-slate-700 px-1.5 py-0.5 gap-2">
+              <button onclick="ajustarComensales(-1)" class="w-6 h-6 bg-slate-800 rounded text-base font-black text-brand-accent flex items-center justify-center active:scale-90">-</button>
+              <span id="label-comensales" class="font-black text-xs w-4 text-center">1</span>
+              <button onclick="ajustarComensales(1)" class="w-6 h-6 bg-slate-800 rounded text-base font-black text-brand-accent flex items-center justify-center active:scale-90">+</button>
             </div>
           </div>
         </div>
 
-        <!-- Cuadrícula de Productos -->
-        <div class="grid grid-cols-2 gap-2.5 flex-1" id="grid-productos"></div>
-      </section>
+        <!-- Cuadrícula compacta de productos -->
+        <div class="grid grid-cols-2 gap-2 flex-1" id="grid-productos"></div>
+      </div>
 
-      <!-- Panel Derecho / Inferior: Hoja de Pedido -->
-      <section class="w-full md:w-80 bg-brand-card border-t md:border-t-0 md:border-l border-slate-700 flex flex-col shrink-0">
-        <div class="px-3 py-2 border-b border-slate-700 flex justify-between items-center">
-          <div>
-            <h2 class="font-bold text-xs text-slate-200">Pedido (<span id="subtitulo-mesa">Mesa 1</span>)</h2>
-            <p id="hora-apertura-label" class="text-[10px] text-slate-400">Mesa libre</p>
-          </div>
-          <button onclick="cancelarCuentaMesa()" class="text-[11px] text-red-400 font-semibold px-2 py-1 rounded bg-slate-800/60">Vaciar Mesa</button>
+      <!-- MITAD INFERIOR (50%): Recuento de Productos y Botón de Cobro -->
+      <div class="h-1/2 bg-brand-card flex flex-col overflow-hidden">
+        <div class="px-3 py-1.5 border-b border-slate-700 flex justify-between items-center shrink-0 bg-slate-900/50">
+          <h2 class="font-bold text-xs text-slate-300">Hoja de Pedido (<span id="subtitulo-mesa">Mesa 1</span>)</h2>
+          <button onclick="cancelarCuentaMesa()" class="text-[11px] text-red-400 font-semibold px-2 py-0.5 rounded bg-slate-800">Vaciar Mesa</button>
         </div>
 
-        <div id="lista-carrito" class="flex-1 overflow-y-auto p-2.5 space-y-1.5 max-h-40 md:max-h-full"></div>
+        <!-- Lista desplazable amplia para ver todos los productos con claridad -->
+        <div id="lista-carrito" class="flex-1 overflow-y-auto p-2.5 space-y-1.5"></div>
 
-        <div class="p-3 bg-slate-900/90 border-t border-slate-700 shrink-0 space-y-2">
-          <div class="flex justify-between items-end">
-            <span class="text-xs text-slate-400 font-medium">Total Acumulado</span>
-            <span id="label-total" class="text-2xl font-black text-brand-accent">$0.00</span>
+        <!-- Pie de cobro -->
+        <div class="px-3 py-2.5 bg-slate-900 border-t border-slate-700 shrink-0 flex items-center justify-between gap-3">
+          <div>
+            <span class="text-[10px] text-slate-400 font-bold uppercase block">Total Mesa</span>
+            <span id="label-total" class="text-xl font-black text-brand-accent leading-none">$0.00</span>
           </div>
-          <button onclick="abrirModalCobro()" class="w-full py-3 bg-emerald-500 text-slate-950 font-black rounded-xl text-sm tracking-wide shadow-lg active:scale-95 transition">
+          <button onclick="abrirModalCobro()" class="flex-1 py-3 bg-emerald-500 text-slate-950 font-black rounded-xl text-sm tracking-wide shadow-lg active:scale-95 transition">
             COBRAR CUENTA
           </button>
         </div>
-      </section>
-    </div>
+      </div>
+
+    </section>
   </main>
 
-  <!-- ================= VISTA 2: CIERRE DEL DÍA Y ENVÍO A DATABRICKS ================= -->
+  <!-- ================= VISTA 2: CIERRE HOY ================= -->
   <main id="vista-corte" class="flex-1 flex flex-col p-3 overflow-y-auto hidden">
-    <div class="flex justify-between items-center bg-brand-card p-2.5 rounded-xl border border-slate-700 mb-3">
+    <!-- Encabezado de Jornada Automática y Envío al Servidor -->
+    <div class="flex justify-between items-center bg-brand-card p-2.5 rounded-xl border border-slate-700 mb-3 shrink-0">
       <div>
-        <span class="text-[10px] uppercase text-slate-400 font-bold block">Fecha Operativa Local</span>
-        <input type="date" id="input-fecha-corte" onchange="cargarCorteDelDia()" class="bg-slate-900 text-white text-xs font-bold p-1.5 rounded border border-slate-700 mt-0.5">
+        <span class="text-[10px] uppercase text-slate-400 font-bold block">Jornada Activa (CDMX)</span>
+        <span id="label-fecha-operativa-hoy" class="text-sm font-black text-white font-mono">----</span>
+        <span id="badge-cancelaciones-pendientes" class="hidden text-[10px] text-red-400 font-bold block">0 bajas pendientes de notificar</span>
       </div>
-      <div class="flex gap-2">
-        <button onclick="sincronizarConDatabricks()" id="btn-sync-dbx" class="px-3 py-2 bg-brand-accent text-slate-950 text-xs font-black rounded-xl shadow active:scale-95 transition">
-          ☁️ Enviar Cierre a Databricks
-        </button>
-        <button onclick="exportarJSON()" class="px-2.5 py-2 bg-slate-800 text-xs font-bold text-slate-200 border border-slate-700 rounded-xl">
-          ⬇️ JSON
-        </button>
-      </div>
+      <button onclick="sincronizarConServidor()" id="btn-sync-servidor" class="px-3.5 py-2.5 bg-brand-accent text-slate-950 text-xs font-black rounded-xl shadow active:scale-95 transition">
+        ☁️ Enviar Cierre al Servidor
+      </button>
     </div>
 
-    <!-- KPIs del Día -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-3">
+    <!-- 4 Métricas Operativas del Día -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3 shrink-0">
       <div class="bg-brand-card p-2.5 rounded-xl border border-slate-700">
-        <span class="text-[10px] uppercase text-slate-400 font-bold block">Venta Cobrada</span>
+        <span class="text-[10px] uppercase text-slate-400 font-bold block">Venta Cobrada Hoy</span>
         <span id="metric-venta-total" class="text-lg font-black text-emerald-400">$0.00</span>
       </div>
       <div class="bg-brand-card p-2.5 rounded-xl border border-slate-700">
-        <span class="text-[10px] uppercase text-slate-400 font-bold block">Cuentas</span>
-        <span id="metric-total-ordenes" class="text-lg font-black text-white">0</span>
+        <span class="text-[10px] uppercase text-slate-400 font-bold block">Por Cobrar (Mesas)</span>
+        <span id="metric-por-cobrar" class="text-lg font-black text-amber-400">$0.00</span>
       </div>
       <div class="bg-brand-card p-2.5 rounded-xl border border-slate-700">
-        <span class="text-[10px] uppercase text-slate-400 font-bold block">Comensales</span>
-        <span id="metric-total-comensales" class="text-lg font-black text-white">0</span>
+        <span class="text-[10px] uppercase text-slate-400 font-bold block">Cuentas / Pers.</span>
+        <span id="metric-cuentas-comensales" class="text-lg font-black text-white">0 / 0</span>
       </div>
       <div class="bg-brand-card p-2.5 rounded-xl border border-slate-700">
-        <span class="text-[10px] uppercase text-slate-400 font-bold block">Ticket / Persona</span>
-        <span id="metric-ticket-promedio" class="text-lg font-black text-brand-accent">$0.00</span>
+        <span class="text-[10px] uppercase text-slate-400 font-bold block">Carnitas x Kg Hoy</span>
+        <span id="metric-kilos-hoy" class="text-lg font-black text-brand-accent">0.00 Kg</span>
       </div>
     </div>
 
-    <!-- Tabla de Ventas -->
+    <!-- Tabla de Ventas del Día con Columna de Borrado -->
     <div class="bg-brand-card rounded-xl border border-slate-700 flex-1 overflow-x-auto">
       <table class="w-full text-left text-xs">
         <thead class="bg-slate-900/60 text-slate-400 font-bold border-b border-slate-700">
           <tr>
             <th class="p-2.5">Hora</th>
-            <th class="p-2.5">Mesa</th>
-            <th class="p-2.5">Pers.</th>
+            <th class="p-2.5">Ubicación</th>
             <th class="p-2.5">Detalle</th>
             <th class="p-2.5 text-right">Total</th>
             <th class="p-2.5 text-center">Estado</th>
+            <th class="p-2.5 text-center">Borrar</th>
           </tr>
         </thead>
         <tbody id="tabla-corte-body" class="divide-y divide-slate-800 text-slate-200"></tbody>
@@ -153,24 +197,21 @@
     </div>
   </main>
 
-  <!-- ================= VISTA 3: ANALÍTICA HISTÓRICA ================= -->
-  <main id="vista-analitica" class="flex-1 flex flex-col p-3 overflow-y-auto hidden space-y-3">
-    <div class="bg-brand-card p-3 rounded-xl border border-slate-700 flex justify-between items-center">
-      <div>
-        <h2 class="font-black text-sm text-brand-accent">Tablero Gold • Databricks</h2>
-        <p class="text-[11px] text-slate-400">Estadísticas históricas y alertas procesadas</p>
+  <!-- ================= VISTA 3: ANALÍTICA (VISOR PURO DEL SERVIDOR) ================= -->
+  <main id="vista-analitica" class="flex-1 flex flex-col p-4 overflow-y-auto hidden">
+    <div class="bg-brand-card p-5 rounded-2xl border border-slate-700 flex-1 flex flex-col items-center justify-center text-center space-y-3">
+      <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/40 flex items-center justify-center text-2xl">
+        📊
       </div>
-      <button onclick="cargarAnaliticaHistorica()" class="px-3 py-1.5 bg-slate-800 border border-slate-600 rounded-lg text-xs font-bold text-white">
-        🔄 Actualizar
-      </button>
-    </div>
-
-    <div id="contenedor-alertas" class="space-y-2"></div>
-    <div class="grid grid-cols-2 gap-2.5" id="grid-kpis-historicos"></div>
-
-    <div class="bg-brand-card p-3 rounded-xl border border-slate-700">
-      <h3 class="text-xs font-bold uppercase text-slate-400 mb-2">Volumen Acumulado por Producto</h3>
-      <div id="lista-ranking-productos" class="space-y-2 text-xs"></div>
+      <h2 class="font-black text-base text-brand-accent">Visor de Analítica Conectado al Servidor</h2>
+      <p class="text-xs text-slate-400 max-w-sm leading-relaxed">
+        Esta sección no almacena ni procesa datos en la memoria del teléfono. Funciona exclusivamente como pantalla de lectura de las tablas procesadas en el servidor.
+      </p>
+      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 w-full max-w-sm text-left text-[11px] text-slate-400 font-mono space-y-1">
+        <p>• Memoria local usada: <span class="text-emerald-400 font-bold">0 KB (Desacoplado)</span></p>
+        <p>• Fuente de datos: <span class="text-amber-400 font-bold">Tablas Oro (Servidor)</span></p>
+        <p>• Estado del módulo: <span class="text-slate-300">En espera de configuración de métricas</span></p>
+      </div>
     </div>
   </main>
 
@@ -185,7 +226,6 @@
         <button onclick="cerrarModalKilo()" class="text-slate-400 font-bold text-lg px-2">✕</button>
       </div>
 
-      <!-- Control Principal de Kilos (Permite escribir 8 directo o usar +/-) -->
       <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
         <div class="flex justify-between items-center mb-2">
           <span class="text-xs font-bold text-slate-300">Cantidad en Kilos (Kg):</span>
@@ -197,21 +237,19 @@
           <button onclick="sumarKilosModal(1)" class="w-12 h-11 bg-slate-800 rounded-xl font-black text-base text-brand-accent border border-slate-700 active:scale-95">+1</button>
         </div>
 
-        <!-- Botones para sumar fracciones rápido -->
         <div class="grid grid-cols-3 gap-1.5 mt-2.5">
-          <button onclick="sumarKilosModal(0.25)" class="py-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-600 text-xs font-bold text-white active:scale-95">
+          <button onclick="sumarKilosModal(0.25)" class="py-2 bg-slate-800 rounded-lg border border-slate-600 text-xs font-bold text-white active:scale-95">
             + 1/4 Kg <span class="block text-[10px] text-brand-accent">+$85</span>
           </button>
-          <button onclick="sumarKilosModal(0.5)" class="py-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-600 text-xs font-bold text-white active:scale-95">
+          <button onclick="sumarKilosModal(0.5)" class="py-2 bg-slate-800 rounded-lg border border-slate-600 text-xs font-bold text-white active:scale-95">
             + 1/2 Kg <span class="block text-[10px] text-brand-accent">+$170</span>
           </button>
-          <button onclick="sumarKilosModal(0.75)" class="py-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-600 text-xs font-bold text-white active:scale-95">
+          <button onclick="sumarKilosModal(0.75)" class="py-2 bg-slate-800 rounded-lg border border-slate-600 text-xs font-bold text-white active:scale-95">
             + 3/4 Kg <span class="block text-[10px] text-brand-accent">+$255</span>
           </button>
         </div>
       </div>
 
-      <!-- O pedir por monto en pesos -->
       <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between gap-2">
         <span class="text-xs text-slate-300 font-bold">Total a cobrar ($):</span>
         <input type="number" id="input-pesos-carnitas-modal" oninput="recalcularDesdePesosModal()" class="w-32 bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-right font-black text-lg text-emerald-400 focus:outline-none focus:border-brand-accent" value="340">
@@ -270,7 +308,37 @@
     const PRECIO_KILO_CARNITAS = 340;
 
     // =========================================================================
-    // 1. IDENTIDAD ÚNICA DEL DISPOSITIVO
+    // 1. RELOJ Y ZONA HORARIA ESTRICTA DE CIUDAD DE MÉXICO (America/Mexico_City)
+    // =========================================================================
+    function obtenerTiempoCDMX(dateObj = new Date()) {
+      const fmt = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Mexico_City',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      const partes = Object.fromEntries(fmt.formatToParts(dateObj).map(p => [p.type, p.value]));
+      const horaLimpia = partes.hour === '24' ? '00' : partes.hour;
+      const ms = String(dateObj.getMilliseconds()).padStart(3, '0');
+
+      const fechaOperativa = `${partes.year}-${partes.month}-${partes.day}`;
+      const horaMinuto = `${horaLimpia}:${partes.minute}`;
+      // Formato ISO-8601 con offset explícito de CDMX (-06:00), nunca en UTC 'Z'
+      const timestampLocalISO = `${fechaOperativa}T${horaLimpia}:${partes.minute}:${partes.second}.${ms}-06:00`;
+
+      return {
+        fecha_operativa: fechaOperativa,
+        hora_corta: horaMinuto,
+        iso_cdmx: timestampLocalISO
+      };
+    }
+
+    // =========================================================================
+    // 2. IDENTIDAD DEL DISPOSITIVO Y CONFIGURACIÓN DEL SERVIDOR
     // =========================================================================
     function obtenerMetadataDispositivo() {
       let deviceId = localStorage.getItem("jarocho_device_id");
@@ -302,29 +370,33 @@
       }
 
       const actualEndpoint = localStorage.getItem("jarocho_sync_url") || "";
-      const nuevoEndpoint = prompt("URL del Worker de Cloudflare hacia Databricks:", actualEndpoint);
+      const nuevoEndpoint = prompt("URL del Servidor de Recepción:", actualEndpoint);
       if (nuevoEndpoint !== null) {
         localStorage.setItem("jarocho_sync_url", nuevoEndpoint.trim());
       }
       obtenerMetadataDispositivo();
     }
 
-    function obtenerFechaLocalISO(dateObj = new Date()) {
-      const offset = dateObj.getTimezoneOffset() * 60000;
-      return new Date(dateObj.getTime() - offset).toISOString().split("T")[0];
-    }
-
     // =========================================================================
-    // 2. BASE DE DATOS LOCAL E INICIALIZACIÓN DE 6 MESAS + PARA LLEVAR
+    // 3. BASE DE DATOS LOCAL E INICIALIZACIÓN DE SALÓN (8 UBICACIONES)
     // =========================================================================
-    const db = new Dexie("ElJarochoDB_v3");
+    const db = new Dexie("ElJarochoDB_v4");
     db.version(1).stores({
       mesas_activas: "mesa_id",
-      ordenes: "orden_id, fecha_operativa, fecha_cierre, sync_status"
+      ordenes: "orden_id, fecha_operativa, fecha_cierre, sync_status",
+      cancelaciones_pendientes: "orden_id, fecha_operativa"
     });
 
-    const UBICACIONES = [
-      "Mesa 1", "Mesa 2", "Mesa 3", "Mesa 4", "Mesa 5", "Mesa 6", "Para Llevar"
+    // Mapa de las 8 ubicaciones con su contenedor en el plano 2D del salón
+    const UBICACIONES_MAPA = [
+      { id: "Llevar 1", slot: "slot-llevar-1", etiqueta: "🥡 Llevar 1" },
+      { id: "Llevar 2", slot: "slot-llevar-2", etiqueta: "🥡 Llevar 2" },
+      { id: "Mesa 1", slot: "slot-mesa-1", etiqueta: "Mesa 1" },
+      { id: "Mesa 2", slot: "slot-mesa-2", etiqueta: "Mesa 2" },
+      { id: "Mesa 3", slot: "slot-mesa-3", etiqueta: "Mesa 3" },
+      { id: "Mesa 4", slot: "slot-mesa-4", etiqueta: "Mesa 4" },
+      { id: "Mesa 5", slot: "slot-mesa-5", etiqueta: "Mesa 5" },
+      { id: "Mesa 6", slot: "slot-mesa-6", etiqueta: "Mesa 6" }
     ];
 
     const CATALOGO = [
@@ -337,18 +409,43 @@
 
     let mesaActual = "Mesa 1";
     let estadoMesas = {};
+    let fechaOperativaActiva = obtenerTiempoCDMX().fecha_operativa;
+
+    // Nuevo día, nuevo comienzo: limpia registros de días pasados automáticamente
+    async function verificarCambioDeDiaAutomatico() {
+      const hoyCDMX = obtenerTiempoCDMX().fecha_operativa;
+      fechaOperativaActiva = hoyCDMX;
+      document.getElementById("label-fecha-operativa-hoy").innerText = hoyCDMX;
+
+      // Borrar órdenes y cancelaciones de fechas anteriores para iniciar cada día en 0
+      await db.ordenes.where("fecha_operativa").notEqual(hoyCDMX).delete();
+      await db.cancelaciones_pendientes.where("fecha_operativa").notEqual(hoyCDMX).delete();
+    }
 
     async function inicializarApp() {
       obtenerMetadataDispositivo();
-      document.getElementById("input-fecha-corte").value = obtenerFechaLocalISO();
+      await verificarCambioDeDiaAutomatico();
 
-      for (const nombreMesa of UBICACIONES) {
-        const guardada = await db.mesas_activas.get(nombreMesa);
-        estadoMesas[nombreMesa] = guardada || {
-          mesa_id: nombreMesa,
+      // Revisar cada 30 segundos si ya cambió el día en Ciudad de México
+      setInterval(async () => {
+        const hoyCheck = obtenerTiempoCDMX().fecha_operativa;
+        if (hoyCheck !== fechaOperativaActiva) {
+          await verificarCambioDeDiaAutomatico();
+          renderizarTodo();
+          if (!document.getElementById("vista-corte").classList.contains("hidden")) {
+            cargarCorteDelDia();
+          }
+        }
+      }, 30000);
+
+      for (const ub of UBICACIONES_MAPA) {
+        const guardada = await db.mesas_activas.get(ub.id);
+        estadoMesas[ub.id] = guardada || {
+          mesa_id: ub.id,
           comensales: 1,
           items: {},
-          fecha_apertura: null
+          fecha_apertura: null,
+          hora_apertura_corta: null
         };
       }
       renderizarCatalogo();
@@ -356,7 +453,70 @@
     }
 
     // =========================================================================
-    // 3. INTERFAZ DEL COMANDERO Y NUEVO MODAL ACUMULADOR DE KILOS
+    // 4. MAPA 2D DEL SALÓN Y NAVEGACIÓN 50/50
+    // =========================================================================
+    function calcularTotalMesa(nombreMesa) {
+      const items = estadoMesas[nombreMesa]?.items || {};
+      return Object.values(items).reduce((acc, item) => acc + (item.cantidad * item.precio_unitario), 0);
+    }
+
+    function calcularTotalEnMesasAbiertas() {
+      return UBICACIONES_MAPA.reduce((acc, ub) => acc + calcularTotalMesa(ub.id), 0);
+    }
+
+    function renderizarMapaSalon() {
+      let sumaEnMesas = 0;
+
+      UBICACIONES_MAPA.forEach(ub => {
+        const contenedor = document.getElementById(ub.slot);
+        if (!contenedor) return;
+
+        const m = estadoMesas[ub.id];
+        const total = calcularTotalMesa(ub.id);
+        sumaEnMesas += total;
+        const ocupada = total > 0;
+
+        let clasesCuadro = "w-full h-full rounded-2xl border-2 p-2 flex flex-col justify-between transition active:scale-95 shadow-md ";
+        if (ocupada) {
+          clasesCuadro += "bg-amber-500/20 border-brand-accent text-white";
+        } else {
+          clasesCuadro += "bg-brand-card/90 border-slate-700/80 text-slate-400 hover:border-slate-500";
+        }
+
+        contenedor.innerHTML = `
+          <button onclick="abrirOrdenDeMesa('${ub.id}')" class="${clasesCuadro}">
+            <div class="flex justify-between items-center w-full">
+              <span class="font-black text-xs sm:text-sm ${ocupada ? 'text-brand-accent' : 'text-slate-300'}">${ub.etiqueta}</span>
+              ${ocupada ? `<span class="text-[10px] bg-slate-900/90 px-1.5 py-0.5 rounded text-slate-200 font-bold">👥 ${m.comensales}</span>` : ''}
+            </div>
+            <div class="text-right w-full">
+              <span class="font-black ${ocupada ? 'text-base sm:text-lg text-emerald-400' : 'text-[11px] text-slate-500 uppercase'}">
+                ${ocupada ? '$' + total.toFixed(2) : 'Libre'}
+              </span>
+            </div>
+          </button>
+        `;
+      });
+
+      document.getElementById("resumen-salon-activo").innerText = `En mesas: $${sumaEnMesas.toFixed(2)}`;
+    }
+
+    function abrirOrdenDeMesa(nombreMesa) {
+      mesaActual = nombreMesa;
+      document.getElementById("subvista-mapa-salon").classList.add("hidden");
+      document.getElementById("subvista-orden-mesa").classList.remove("hidden");
+      renderizarTodo();
+    }
+
+    function irAMapaMesas() {
+      cambiarVista('comanda');
+      document.getElementById("subvista-orden-mesa").classList.add("hidden");
+      document.getElementById("subvista-mapa-salon").classList.remove("hidden");
+      renderizarMapaSalon();
+    }
+
+    // =========================================================================
+    // 5. CATÁLOGO Y GESTIÓN DE ORDEN (VISTA 50/50)
     // =========================================================================
     function renderizarCatalogo() {
       const grid = document.getElementById("grid-productos");
@@ -364,7 +524,7 @@
       CATALOGO.forEach((p, idx) => {
         const btn = document.createElement("button");
         const spanClass = idx === 4 ? "col-span-2 bg-amber-500/10 border-amber-500/60" : "bg-brand-card border-slate-700";
-        btn.className = `${spanClass} border-2 active:border-brand-accent p-3.5 rounded-2xl flex justify-between items-center text-left shadow-lg active:scale-95 transition`;
+        btn.className = `${spanClass} border active:border-brand-accent px-3 py-2 rounded-xl flex justify-between items-center text-left shadow active:scale-95 transition`;
         btn.onclick = () => {
           if (p.tipo === "pesable") {
             abrirModalKilo();
@@ -374,10 +534,10 @@
         };
         btn.innerHTML = `
           <div>
-            <span class="font-black text-base text-slate-100 block">${p.nombre}</span>
-            <span class="font-black text-base text-brand-accent">$${p.precio.toFixed(2)} ${p.tipo === 'pesable' ? '/ Kg' : ''}</span>
+            <span class="font-black text-xs sm:text-sm text-slate-100 block leading-tight">${p.nombre}</span>
+            <span class="font-black text-xs sm:text-sm text-brand-accent">$${p.precio.toFixed(2)} ${p.tipo === 'pesable' ? '/ Kg' : ''}</span>
           </div>
-          <span class="text-2xl">${p.icono}</span>
+          <span class="text-xl">${p.icono}</span>
         `;
         grid.appendChild(btn);
       });
@@ -433,7 +593,11 @@
 
     async function agregarItemAMesa(keyId, nombre, precioUnitario, cantidad, pesoKg = null) {
       const m = estadoMesas[mesaActual];
-      if (!m.fecha_apertura) m.fecha_apertura = new Date().toISOString();
+      if (!m.fecha_apertura) {
+        const t = obtenerTiempoCDMX();
+        m.fecha_apertura = t.iso_cdmx;
+        m.hora_apertura_corta = t.hora_corta;
+      }
 
       if (m.items[keyId]) {
         m.items[keyId].cantidad += cantidad;
@@ -455,18 +619,11 @@
       if (!m.items[keyId]) return;
       m.items[keyId].cantidad += delta;
       if (m.items[keyId].cantidad <= 0) delete m.items[keyId];
-      if (Object.keys(m.items).length === 0) m.fecha_apertura = null;
+      if (Object.keys(m.items).length === 0) {
+        m.fecha_apertura = null;
+        m.hora_apertura_corta = null;
+      }
       await persistirMesaActual();
-    }
-
-    function calcularTotalMesa(nombreMesa) {
-      const items = estadoMesas[nombreMesa]?.items || {};
-      return Object.values(items).reduce((acc, item) => acc + (item.cantidad * item.precio_unitario), 0);
-    }
-
-    function seleccionarMesa(nombre) {
-      mesaActual = nombre;
-      renderizarTodo();
     }
 
     async function ajustarComensales(delta) {
@@ -478,7 +635,13 @@
     async function cancelarCuentaMesa() {
       if (calcularTotalMesa(mesaActual) === 0) return;
       if (!confirm(`¿Vaciar toda la cuenta abierta de ${mesaActual}?`)) return;
-      estadoMesas[mesaActual] = { mesa_id: mesaActual, comensales: 1, items: {}, fecha_apertura: null };
+      estadoMesas[mesaActual] = {
+        mesa_id: mesaActual,
+        comensales: 1,
+        items: {},
+        fecha_apertura: null,
+        hora_apertura_corta: null
+      };
       await persistirMesaActual();
     }
 
@@ -487,42 +650,17 @@
       renderizarTodo();
     }
 
-    function renderizarBarraMesas() {
-      const barra = document.getElementById("barra-mesas");
-      barra.innerHTML = "";
-      UBICACIONES.forEach(nombre => {
-        const total = calcularTotalMesa(nombre);
-        const ocupada = total > 0;
-        const esActiva = nombre === mesaActual;
-
-        const btn = document.createElement("button");
-        let estilos = "p-1.5 rounded-xl text-center border transition flex flex-col items-center justify-center ";
-        if (esActiva) estilos += "bg-brand-accent text-slate-950 border-brand-accent font-black shadow";
-        else if (ocupada) estilos += "bg-amber-500/20 text-amber-300 border-amber-500/50 font-bold";
-        else estilos += "bg-brand-card text-slate-400 border-slate-800 font-semibold";
-
-        btn.className = estilos;
-        btn.onclick = () => seleccionarMesa(nombre);
-        btn.innerHTML = `
-          <span class="text-[11px] leading-tight truncate w-full">${nombre}</span>
-          <span class="text-[10px] mt-0.5 ${esActiva ? 'text-slate-950 font-extrabold' : ocupada ? 'text-amber-400' : 'text-slate-500'}">
-            ${ocupada ? '$' + total : 'Libre'}
-          </span>
-        `;
-        barra.appendChild(btn);
-      });
-    }
-
     function renderizarTodo() {
-      renderizarBarraMesas();
+      renderizarMapaSalon();
       const m = estadoMesas[mesaActual];
+      if (!m) return;
+
       document.getElementById("titulo-mesa-actual").innerText = mesaActual;
       document.getElementById("subtitulo-mesa").innerText = mesaActual;
       document.getElementById("label-comensales").innerText = m.comensales;
 
       if (m.fecha_apertura) {
-        const horaAp = new Date(m.fecha_apertura).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        document.getElementById("hora-apertura-label").innerText = `Abierta ${horaAp}`;
+        document.getElementById("hora-apertura-label").innerText = `Abierta ${m.hora_apertura_corta || ''}`;
       } else {
         document.getElementById("hora-apertura-label").innerText = "Mesa libre";
       }
@@ -532,24 +670,24 @@
       const keys = Object.keys(m.items);
 
       if (keys.length === 0) {
-        contenedor.innerHTML = `<p class="text-xs text-slate-500 italic text-center mt-4">Sin productos anotados en ${mesaActual}</p>`;
+        contenedor.innerHTML = `<p class="text-xs text-slate-500 italic text-center mt-6">Sin productos anotados en ${mesaActual}</p>`;
       }
 
       keys.forEach(k => {
         const item = m.items[k];
         const subtotal = item.cantidad * item.precio_unitario;
         const row = document.createElement("div");
-        row.className = "flex justify-between items-center bg-slate-900/70 p-2 rounded-lg border border-slate-800 text-xs";
+        row.className = "flex justify-between items-center bg-slate-900/80 px-2.5 py-2 rounded-lg border border-slate-800 text-xs";
         row.innerHTML = `
           <div>
             <p class="font-bold text-white">${item.nombre}</p>
             <p class="text-[10px] text-slate-400">$${item.precio_unitario} c/u</p>
           </div>
           <div class="flex items-center gap-2">
-            <button onclick="cambiarCantidadItem('${k}', -1)" class="w-6 h-6 bg-slate-800 text-brand-accent font-bold rounded flex items-center justify-center">-</button>
-            <span class="font-bold w-5 text-center text-white">${item.cantidad}</span>
-            <button onclick="cambiarCantidadItem('${k}', 1)" class="w-6 h-6 bg-slate-800 text-brand-accent font-bold rounded flex items-center justify-center">+</button>
-            <span class="font-bold text-slate-200 ml-1 w-14 text-right">$${subtotal}</span>
+            <button onclick="cambiarCantidadItem('${k}', -1)" class="w-7 h-7 bg-slate-800 text-brand-accent font-black rounded-lg flex items-center justify-center">-</button>
+            <span class="font-black w-5 text-center text-white">${item.cantidad}</span>
+            <button onclick="cambiarCantidadItem('${k}', 1)" class="w-7 h-7 bg-slate-800 text-brand-accent font-black rounded-lg flex items-center justify-center">+</button>
+            <span class="font-black text-emerald-400 ml-1 w-14 text-right">$${subtotal}</span>
           </div>
         `;
         contenedor.appendChild(row);
@@ -559,7 +697,7 @@
     }
 
     // =========================================================================
-    // 4. MODAL CALCULADORA DE CAMBIO Y REGISTRO
+    // 6. COBRO Y CIERRE DE CUENTA CON MARCA TEMPORAL CDMX
     // =========================================================================
     function abrirModalCobro() {
       const total = calcularTotalMesa(mesaActual);
@@ -607,11 +745,12 @@
     }
 
     async function ejecutarCierreDefinitivo() {
+      await verificarCambioDeDiaAutomatico();
       const m = estadoMesas[mesaActual];
       const total = calcularTotalMesa(mesaActual);
       const recibido = parseFloat(document.getElementById("input-efectivo-recibido").value) || total;
       const deviceMeta = obtenerMetadataDispositivo();
-      const ahora = new Date();
+      const tiempoCierre = obtenerTiempoCDMX();
 
       const productosDetalle = Object.values(m.items).map(item => ({
         nombre: item.nombre,
@@ -622,10 +761,11 @@
       }));
 
       const ordenCerrada = {
-        orden_id: `ord_${ahora.getTime()}_${deviceMeta.device_id}`,
-        fecha_operativa: obtenerFechaLocalISO(ahora),
-        fecha_apertura: m.fecha_apertura || ahora.toISOString(),
-        fecha_cierre: ahora.toISOString(),
+        orden_id: `ord_${Date.now()}_${deviceMeta.device_id}`,
+        fecha_operativa: tiempoCierre.fecha_operativa,
+        hora_cierre_cdmx: tiempoCierre.hora_corta,
+        fecha_apertura: m.fecha_apertura || tiempoCierre.iso_cdmx,
+        fecha_cierre: tiempoCierre.iso_cdmx,
         mesa: mesaActual,
         comensales: m.comensales,
         total: total,
@@ -633,73 +773,128 @@
         cambio_entregado: Math.max(0, recibido - total),
         productos: productosDetalle,
         device_metadata: deviceMeta,
-        sync_status: 0
+        sync_status: 0 // 0 = Local, 1 = En Base
       };
 
       await db.ordenes.add(ordenCerrada);
 
-      estadoMesas[mesaActual] = { mesa_id: mesaActual, comensales: 1, items: {}, fecha_apertura: null };
+      estadoMesas[mesaActual] = {
+        mesa_id: mesaActual,
+        comensales: 1,
+        items: {},
+        fecha_apertura: null,
+        hora_apertura_corta: null
+      };
       await persistirMesaActual();
       cerrarModalCobro();
       if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
+
+      // Al terminar de cobrar una mesa, regresar al plano 2D del salón
+      irAMapaMesas();
     }
 
     // =========================================================================
-    // 5. CORTE DEL DÍA Y ENVÍO A DATABRICKS CON DIAGNÓSTICO DETALLADO
+    // 7. CIERRE HOY, BORRADO DE REGISTROS (LOCAL VS EN BASE) Y PUSH AL SERVIDOR
     // =========================================================================
+    async function eliminarRegistroDeCierre(ordenId) {
+      const registro = await db.ordenes.get(ordenId);
+      if (!registro) return;
+
+      if (registro.sync_status === 0) {
+        // Caso 1: Sigue en Local -> Desaparece del balance y nunca se envía al servidor
+        if (!confirm(`¿Borrar la orden local de ${registro.mesa} ($${registro.total})? Desaparecerá del balance de hoy.`)) return;
+        await db.ordenes.delete(ordenId);
+      } else {
+        // Caso 2: Ya fue enviada a la Base -> Se quita del balance y se agenda en metadata para limpieza en el servidor
+        if (!confirm(`Esta orden de ${registro.mesa} ($${registro.total}) ya está en la Base.\n\n¿Deseas borrarla del balance y enviar instrucción de limpieza (${ordenId}) en el próximo corte?`)) return;
+        const t = obtenerTiempoCDMX();
+        await db.cancelaciones_pendientes.put({
+          orden_id: registro.orden_id,
+          fecha_operativa: registro.fecha_operativa,
+          mesa: registro.mesa,
+          monto_cancelado: registro.total,
+          cancelado_en: t.iso_cdmx
+        });
+        await db.ordenes.delete(ordenId);
+      }
+
+      cargarCorteDelDia();
+    }
+
     async function cargarCorteDelDia() {
-      const fechaSeleccionada = document.getElementById("input-fecha-corte").value || obtenerFechaLocalISO();
-      const ordenesFecha = await db.ordenes.where("fecha_operativa").equals(fechaSeleccionada).toArray();
+      await verificarCambioDeDiaAutomatico();
+      const ordenesHoy = await db.ordenes.where("fecha_operativa").equals(fechaOperativaActiva).toArray();
+      const bajasPendientes = await db.cancelaciones_pendientes.toArray();
+
+      // Mostrar indicador si hay órdenes ya enviadas que fueron borradas y esperan notificar al servidor
+      const badgeBajas = document.getElementById("badge-cancelaciones-pendientes");
+      if (bajasPendientes.length > 0) {
+        badgeBajas.classList.remove("hidden");
+        badgeBajas.innerText = `${bajasPendientes.length} baja(s) lista(s) para limpiar en Base`;
+      } else {
+        badgeBajas.classList.add("hidden");
+      }
 
       let ventaTotal = 0;
       let totalComensales = 0;
+      let kilosCarnitasHoy = 0;
       const tbody = document.getElementById("tabla-corte-body");
       tbody.innerHTML = "";
 
-      ordenesFecha.reverse().forEach(o => {
+      ordenesHoy.reverse().forEach(o => {
         ventaTotal += o.total;
         totalComensales += o.comensales;
+        o.productos.forEach(p => {
+          if (p.peso_kg_total) kilosCarnitasHoy += p.peso_kg_total;
+        });
 
-        const hora = new Date(o.fecha_cierre).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const horaTexto = o.hora_cierre_cdmx || o.fecha_cierre.substring(11, 16);
         const resumenProductos = o.productos.map(p => `${p.cantidad}x ${p.nombre}`).join(", ");
-        const aliasCorto = o.device_metadata?.device_alias || "Local";
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td class="p-2.5 font-mono">
-            ${hora}
-            <span class="block text-[9px] text-slate-500">${aliasCorto}</span>
-          </td>
-          <td class="p-2.5 font-semibold">${o.mesa}</td>
-          <td class="p-2.5">${o.comensales}</td>
-          <td class="p-2.5 text-slate-300 max-w-xs truncate">${resumenProductos}</td>
+          <td class="p-2.5 font-mono text-white">${horaTexto}</td>
+          <td class="p-2.5 font-semibold">${o.mesa} <span class="text-[10px] text-slate-400 block">${o.comensales} pers.</span></td>
+          <td class="p-2.5 text-slate-300 max-w-[140px] truncate">${resumenProductos}</td>
           <td class="p-2.5 font-bold text-right text-emerald-400">$${o.total.toFixed(2)}</td>
           <td class="p-2.5 text-center">
             <span class="px-1.5 py-0.5 text-[9px] font-bold rounded ${o.sync_status === 1 ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'}">
-              ${o.sync_status === 1 ? 'DBX OK' : 'Local'}
+              ${o.sync_status === 1 ? 'En Base' : 'Local'}
             </span>
+          </td>
+          <td class="p-2.5 text-center">
+            <button onclick="eliminarRegistroDeCierre('${o.orden_id}')" class="px-2 py-1 bg-red-500/20 hover:bg-red-500/40 text-red-300 rounded-lg text-xs font-bold">
+              🗑️
+            </button>
           </td>
         `;
         tbody.appendChild(tr);
       });
 
       document.getElementById("metric-venta-total").innerText = `$${ventaTotal.toFixed(2)}`;
-      document.getElementById("metric-total-ordenes").innerText = ordenesFecha.length;
-      document.getElementById("metric-total-comensales").innerText = totalComensales;
-      const ticketProm = totalComensales > 0 ? (ventaTotal / totalComensales).toFixed(2) : "0.00";
-      document.getElementById("metric-ticket-promedio").innerText = `$${ticketProm}`;
+      document.getElementById("metric-por-cobrar").innerText = `$${calcularTotalEnMesasAbiertas().toFixed(2)}`;
+      document.getElementById("metric-cuentas-comensales").innerText = `${ordenesHoy.length} / ${totalComensales}`;
+      document.getElementById("metric-kilos-hoy").innerText = `${kilosCarnitasHoy.toFixed(2)} Kg`;
     }
 
-    async function construirPayloadCierre(ordenesAEnviar) {
+    async function construirPayloadCierre(ordenesAEnviar, cancelacionesAEnviar) {
       const deviceMeta = obtenerMetadataDispositivo();
-      const fechaCorte = document.getElementById("input-fecha-corte").value || obtenerFechaLocalISO();
+      const t = obtenerTiempoCDMX();
+
       return {
-        batch_id: `batch_${fechaCorte}_${deviceMeta.device_id}_${Date.now()}`,
-        fecha_operativa_corte: fechaCorte,
-        enviado_en: new Date().toISOString(),
+        batch_id: `batch_${t.fecha_operativa}_${deviceMeta.device_id}_${Date.now()}`,
+        fecha_operativa_corte: t.fecha_operativa,
+        enviado_en: t.iso_cdmx,
+        zona_horaria: "America/Mexico_City (UTC-06:00)",
         origen_dispositivo: deviceMeta,
+        limpieza_registros: {
+          ejecutar_borrado: cancelacionesAEnviar.length > 0,
+          ordenes_canceladas: cancelacionesAEnviar.map(c => c.orden_id),
+          detalle_cancelaciones: cancelacionesAEnviar
+        },
         resumen_lote: {
-          cantidad_ordenes: ordenesAEnviar.length,
+          cantidad_ordenes_nuevas: ordenesAEnviar.length,
+          cantidad_ordenes_canceladas: cancelacionesAEnviar.length,
           suma_total_pesos: ordenesAEnviar.reduce((acc, o) => acc + o.total, 0),
           suma_comensales: ordenesAEnviar.reduce((acc, o) => acc + o.comensales, 0)
         },
@@ -707,28 +902,31 @@
       };
     }
 
-    async function sincronizarConDatabricks() {
-      const fechaSeleccionada = document.getElementById("input-fecha-corte").value || obtenerFechaLocalISO();
+    async function sincronizarConServidor() {
+      await verificarCambioDeDiaAutomatico();
       const pendientes = await db.ordenes
-        .where("fecha_operativa").equals(fechaSeleccionada)
+        .where("fecha_operativa").equals(fechaOperativaActiva)
         .filter(o => o.sync_status === 0)
         .toArray();
 
-      if (pendientes.length === 0) {
-        alert("Todas las órdenes de esta fecha ya están sincronizadas o no hay ventas registradas.");
+      const cancelaciones = await db.cancelaciones_pendientes.toArray();
+
+      if (pendientes.length === 0 && cancelaciones.length === 0) {
+        alert("Todo el cierre de hoy y las bajas ya están sincronizados con el Servidor.");
         return;
       }
 
       const syncUrl = localStorage.getItem("jarocho_sync_url");
-      const payload = await construirPayloadCierre(pendientes);
+      const payload = await construirPayloadCierre(pendientes, cancelaciones);
 
+      // Si no hay URL configurada, descarga en automático y conserva registros en Local
       if (!syncUrl) {
-        alert("No has configurado la URL del Worker (toca arriba a la izquierda en 'EL JAROCHO'). Se descargará el JSON manualmente.");
-        descargarBlobJSON(payload, `cierre_${payload.batch_id}.json`);
+        descargarBlobJSON(payload, `respaldo_${payload.batch_id}.json`);
+        alert("No hay URL de Servidor configurada. Se descargó el respaldo automático en tu teléfono y los registros se mantienen en Local para un próximo envío.");
         return;
       }
 
-      const btn = document.getElementById("btn-sync-dbx");
+      const btn = document.getElementById("btn-sync-servidor");
       btn.innerText = "⏳ Enviando...";
       btn.disabled = true;
 
@@ -744,24 +942,26 @@
           throw new Error(`HTTP ${res.status}: ${textoRespuesta}`);
         }
 
-        const ids = pendientes.map(o => o.orden_id);
-        await db.ordenes.where("orden_id").anyOf(ids).modify({ sync_status: 1 });
-        alert(`✅ ${pendientes.length} órdenes enviadas exitosamente a Databricks.`);
+        // Si el servidor confirmó recepción, actualizar órdenes a 'En Base' y limpiar cola de cancelaciones
+        if (pendientes.length > 0) {
+          const ids = pendientes.map(o => o.orden_id);
+          await db.ordenes.where("orden_id").anyOf(ids).modify({ sync_status: 1 });
+        }
+        if (cancelaciones.length > 0) {
+          await db.cancelaciones_pendientes.clear();
+        }
+
+        alert(`✅ Envío exitoso al Servidor (${pendientes.length} órdenes nuevas, ${cancelaciones.length} bajas notificadas).`);
         cargarCorteDelDia();
       } catch (err) {
-        alert(`❌ Falló el envío:\n${err.message}\n\nRevisa que la URL empiece con https:// y verifica tus variables en Cloudflare.`);
+        // Descarga automática de respaldo sin alterar sync_status = 0 para futuros push
+        descargarBlobJSON(payload, `respaldo_${payload.batch_id}.json`);
+        alert(`⚠️ No se pudo conectar con el Servidor (${err.message}).\n\nSe descargó una copia automática de respaldo y los registros siguen guardados como 'Local' para reintentar más tarde.`);
         console.error(err);
       } finally {
-        btn.innerText = "☁️ Enviar Cierre a Databricks";
+        btn.innerText = "☁️ Enviar Cierre al Servidor";
         btn.disabled = false;
       }
-    }
-
-    async function exportarJSON() {
-      const fechaSeleccionada = document.getElementById("input-fecha-corte").value || obtenerFechaLocalISO();
-      const ordenesFecha = await db.ordenes.where("fecha_operativa").equals(fechaSeleccionada).toArray();
-      const payload = await construirPayloadCierre(ordenesFecha);
-      descargarBlobJSON(payload, `el_jarocho_${fechaSeleccionada}_${payload.origen_dispositivo.device_id}.json`);
     }
 
     function descargarBlobJSON(objeto, nombreArchivo) {
@@ -773,71 +973,15 @@
       a.click();
     }
 
-    // =========================================================================
-    // 6. PESTAÑA ANALÍTICA
-    // =========================================================================
-    async function cargarAnaliticaHistorica() {
-      const todas = await db.ordenes.toArray();
-      const diasSet = new Set(todas.map(o => o.fecha_operativa));
-      const numDias = Math.max(1, diasSet.size);
-      const ventaHistorica = todas.reduce((acc, o) => acc + o.total, 0);
-      const promedioDiario = ventaHistorica / numDias;
-
-      const hoyISO = obtenerFechaLocalISO();
-      const ventaHoy = todas.filter(o => o.fecha_operativa === hoyISO).reduce((acc, o) => acc + o.total, 0);
-
-      const conteoProductos = {};
-      let kilosCarnitasVendidos = 0;
-
-      todas.forEach(o => {
-        o.productos.forEach(p => {
-          conteoProductos[p.nombre] = (conteoProductos[p.nombre] || 0) + p.cantidad;
-          if (p.peso_kg_total) kilosCarnitasVendidos += p.peso_kg_total;
-        });
-      });
-
-      document.getElementById("contenedor-alertas").innerHTML = `
-        <div class="p-3 rounded-xl border ${ventaHoy >= promedioDiario ? 'bg-emerald-950/40 border-emerald-600/50 text-emerald-300' : 'bg-amber-950/40 border-amber-600/50 text-amber-300'} text-xs">
-          <span class="font-black block">⚡ Alerta de Ritmo de Venta (Hoy vs Promedio)</span>
-          Hoy llevas <b>$${ventaHoy.toFixed(2)}</b>. El promedio diario histórico en este dispositivo es de <b>$${promedioDiario.toFixed(2)}</b> (${numDias} días registrados).
-        </div>
-      `;
-
-      document.getElementById("grid-kpis-historicos").innerHTML = `
-        <div class="bg-brand-card p-3 rounded-xl border border-slate-700">
-          <span class="text-[10px] uppercase text-slate-400 font-bold block">Venta Histórica Acumulada</span>
-          <span class="text-lg font-black text-emerald-400">$${ventaHistorica.toFixed(2)}</span>
-        </div>
-        <div class="bg-brand-card p-3 rounded-xl border border-slate-700">
-          <span class="text-[10px] uppercase text-slate-400 font-bold block">Kilos Directos Vendidos</span>
-          <span class="text-lg font-black text-brand-accent">${kilosCarnitasVendidos.toFixed(2)} Kg</span>
-        </div>
-      `;
-
-      const divRanking = document.getElementById("lista-ranking-productos");
-      divRanking.innerHTML = "";
-      Object.entries(conteoProductos)
-        .sort((a, b) => b[1] - a[1])
-        .forEach(([nombre, cant]) => {
-          divRanking.innerHTML += `
-            <div class="flex justify-between items-center bg-slate-900/60 p-2 rounded-lg border border-slate-800">
-              <span class="font-bold text-slate-200">${nombre}</span>
-              <span class="font-black text-brand-accent">${cant} uds</span>
-            </div>
-          `;
-        });
-    }
-
     function cambiarVista(vista) {
       ["comanda", "corte", "analitica"].forEach(v => {
         document.getElementById(`vista-${v}`).classList.toggle("hidden", v !== vista);
         const btn = document.getElementById(`btn-tab-${v}`);
         btn.className = v === vista
-          ? "px-2.5 py-1.5 text-xs font-bold rounded-lg bg-brand-accent text-slate-900 transition"
-          : "px-2.5 py-1.5 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 transition";
+          ? "px-3 py-1.5 text-xs font-bold rounded-lg bg-brand-accent text-slate-900 transition"
+          : "px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 transition";
       });
       if (vista === "corte") cargarCorteDelDia();
-      if (vista === "analitica") cargarAnaliticaHistorica();
     }
 
     inicializarApp();
