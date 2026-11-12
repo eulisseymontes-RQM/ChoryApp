@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Carnitas El Jarocho - POS v4.1</title>
+  <title>Carnitas El Jarocho - POS</title>
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#F59E0B">
   <link rel="apple-touch-icon" href="./icon.png">
@@ -28,13 +28,13 @@
 </head>
 <body class="bg-brand-dark text-brand-text flex flex-col h-screen overflow-hidden font-sans">
 
-  <!-- TOP BAR -->
+  <!-- [UI: HEADER] -->
   <header class="bg-brand-card px-3 py-2 border-b border-slate-700 flex justify-between items-center shrink-0">
     <div class="flex items-center gap-2" onclick="configurarDispositivo()">
       <img src="./icon.png" alt="Logo" onerror="this.style.display='none'" class="w-8 h-8 rounded-lg object-cover border border-brand-accent">
       <div class="cursor-pointer">
         <h1 class="font-black text-sm tracking-wide text-brand-accent leading-none">EL JAROCHO</h1>
-        <p id="label-device-header" class="text-[10px] text-emerald-400 font-mono mt-0.5">ID: Cargando...</p>
+        <p id="label-device-header" class="text-[10px] text-emerald-400 font-mono mt-0.5">ID: ...</p>
       </div>
     </div>
     <div class="flex gap-1.5">
@@ -44,332 +44,49 @@
     </div>
   </header>
 
-  <!-- ================= VISTA 1: SALÓN 2D Y ORDEN DE MESA (50/50) ================= -->
+  <!-- [UI: VISTA MESAS Y ORDEN] -->
   <main id="vista-comanda" class="flex-1 flex flex-col overflow-hidden">
 
-    <!-- SUB-VISTA 1A: MAPA AÉREO 2D DEL SALÓN -->
+    <!-- [SUBVISTA: MAPA 2D SALON] -->
     <section id="subvista-mapa-salon" class="flex-1 flex flex-col p-3 overflow-hidden">
       <div class="flex justify-between items-center mb-2 shrink-0 px-1">
-        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Plano del Salón (Toca una ubicación)</span>
+        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Plano del Salón</span>
         <span id="resumen-salon-activo" class="text-xs font-black text-brand-accent">En mesas: $0.00</span>
       </div>
 
-      <!-- RECTÁNGULO DELIMITADOR DEL SALÓN -->
       <div class="flex-1 border-2 border-slate-700/80 rounded-2xl bg-slate-900/50 p-3 grid grid-rows-6 grid-cols-2 gap-2.5 relative shadow-inner">
-        
-        <!-- Fila 1 (Primer 1/6 superior): Dos cuadrados Para Llevar centrados arriba -->
         <div class="col-span-2 row-span-1 flex justify-center items-stretch gap-3 px-4 pb-1 border-b border-dashed border-slate-800">
           <div id="slot-llevar-1" class="w-1/2 max-w-[150px] flex"></div>
           <div id="slot-llevar-2" class="w-1/2 max-w-[150px] flex"></div>
         </div>
 
-        <!-- Fila 2: Izquierda vacía | Derecha Mesa 1 -->
         <div class="col-start-1 row-start-2 flex items-center justify-center pointer-events-none">
-          <span class="text-[10px] uppercase tracking-widest text-slate-700 font-bold rotate-[-90deg] sm:rotate-0">Acceso / Pasillo</span>
+          <span class="text-[10px] uppercase tracking-widest text-slate-700 font-bold">Pasillo</span>
         </div>
         <div id="slot-mesa-1" class="col-start-2 row-start-2 flex"></div>
 
-        <!-- Fila 3: Izquierda vacía | Derecha Mesa 2 -->
         <div class="col-start-1 row-start-3"></div>
         <div id="slot-mesa-2" class="col-start-2 row-start-3 flex"></div>
 
-        <!-- Fila 4: Izquierda Mesa 5 | Derecha Mesa 3 -->
         <div id="slot-mesa-5" class="col-start-1 row-start-4 flex"></div>
         <div id="slot-mesa-3" class="col-start-2 row-start-4 flex"></div>
 
-        <!-- Fila 5: Izquierda Mesa 6 | Derecha Mesa 4 -->
         <div id="slot-mesa-6" class="col-start-1 row-start-5 flex"></div>
         <div id="slot-mesa-4" class="col-start-2 row-start-5 flex"></div>
 
-        <!-- Fila 6: Margen inferior de referencia -->
         <div class="col-span-2 row-start-6 flex items-center justify-between px-3 text-[10px] text-slate-600 font-semibold border-t border-dashed border-slate-800/70">
-          <span>Lado Izquierdo (Mesas 5-6)</span>
-          <span>Lado Derecho (Mesas 1-4)</span>
+          <span>Izquierda (5-6)</span>
+          <span>Derecha (1-4)</span>
         </div>
       </div>
     </section>
 
-    <!-- SUB-VISTA 1B: CAPTURA DE ORDEN DE LA MESA (50% / 50%) -->
+    <!-- [SUBVISTA: ORDEN 50/50] -->
     <section id="subvista-orden-mesa" class="flex-1 flex flex-col overflow-hidden hidden">
-      
-      <!-- MITAD SUPERIOR (50%): Cabecera de Mesa, Comensales y Productos -->
       <div class="h-1/2 flex flex-col p-2.5 overflow-y-auto border-b-2 border-slate-700 bg-brand-dark">
         <div class="bg-brand-card p-2 rounded-xl border border-slate-700 flex justify-between items-center mb-2 shrink-0">
           <div class="flex items-center gap-2">
-            <button onclick="irAMapaMesas()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-black border border-slate-600 active:scale-95">
-              ← Salón
-            </button>
-            <div>
-              <span id="titulo-mesa-actual" class="text-sm font-black text-brand-accent block leading-none">Mesa 1</span>
-              <span id="hora-apertura-label" class="text-[10px] text-slate-400">Mesa libre</span>
-            </div>
-          </div>
-
-          <div class="flex items-center gap-1.5">
-            <span class="text-[11px] font-bold text-slate-300">Pers:</span>
-            <div class="flex items-center bg-slate-900 rounded-lg border border-slate-700 px-1.5 py-0.5 gap-2">
-              <button onclick="ajustarComensales(-1)" class="w-6 h-6 bg-slate-800 rounded text-base font-black text-brand-accent flex items-center justify-center active:scale-90">-</button>
-              <span id="label-comensales" class="font-black text-xs w-4 text-center">1</span>
-              <button onclick="ajustarComensales(1)" class="w-6 h-6 bg-slate-800 rounded text-base font-black text-brand-accent flex items-center justify-center active:scale-90">+</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Cuadrícula compacta de productos -->
-        <div class="grid grid-cols-2 gap-2 flex-1" id="grid-productos"></div>
-      </div>
-
-      <!-- MITAD INFERIOR (50%): Recuento de Productos y Botón de Cobro -->
-      <div class="h-1/2 bg-brand-card flex flex-col overflow-hidden">
-        <div class="px-3 py-1.5 border-b border-slate-700 flex justify-between items-center shrink-0 bg-slate-900/50">
-          <h2 class="font-bold text-xs text-slate-300">Hoja de Pedido (<span id="subtitulo-mesa">Mesa 1</span>)</h2>
-          <button onclick="cancelarCuentaMesa()" class="text-[11px] text-red-400 font-semibold px-2 py-0.5 rounded bg-slate-800">Vaciar Mesa</button>
-        </div>
-
-        <div id="lista-carrito" class="flex-1 overflow-y-auto p-2.5 space-y-1.5"></div>
-
-        <div class="px-3 py-2.5 bg-slate-900 border-t border-slate-700 shrink-0 flex items-center justify-between gap-3">
-          <div>
-            <span class="text-[10px] text-slate-400 font-bold uppercase block">Total Mesa</span>
-            <span id="label-total" class="text-xl font-black text-brand-accent leading-none">$0.00</span>
-          </div>
-          <button onclick="abrirModalCobro()" class="flex-1 py-3 bg-emerald-500 text-slate-950 font-black rounded-xl text-sm tracking-wide shadow-lg active:scale-95 transition">
-            COBRAR CUENTA
-          </button>
-        </div>
-      </div>
-
-    </section>
-  </main>
-
-  <!-- ================= VISTA 2: CIERRE HOY ================= -->
-  <main id="vista-corte" class="flex-1 flex flex-col p-3 overflow-y-auto hidden">
-    <!-- Encabezado de Jornada Automática y Envío al Servidor -->
-    <div class="flex justify-between items-center bg-brand-card p-2.5 rounded-xl border border-slate-700 mb-3 shrink-0">
-      <div>
-        <span class="text-[10px] uppercase text-slate-400 font-bold block">Jornada Activa (CDMX)</span>
-        <span id="label-fecha-operativa-hoy" class="text-sm font-black text-white font-mono">----</span>
-        <span id="badge-cancelaciones-pendientes" class="hidden text-[10px] text-red-400 font-bold block">0 bajas pendientes de notificar</span>
-      </div>
-      <button onclick="sincronizarConServidor()" id="btn-sync-servidor" class="px-3.5 py-2.5 bg-brand-accent text-slate-950 text-xs font-black rounded-xl shadow active:scale-95 transition">
-        ☁️ Enviar Cierre al Servidor
-      </button>
-    </div>
-
-    <!-- 4 Métricas Operativas del Día (Con Cuentas y Personas separadas) -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3 shrink-0">
-      <div class="bg-brand-card p-2.5 rounded-xl border border-slate-700">
-        <span class="text-[10px] uppercase text-slate-400 font-bold block">Venta Cobrada Hoy</span>
-        <span id="metric-venta-total" class="text-lg font-black text-emerald-400">$0.00</span>
-      </div>
-      <div class="bg-brand-card p-2.5 rounded-xl border border-slate-700">
-        <span class="text-[10px] uppercase text-slate-400 font-bold block">Por Cobrar (Mesas)</span>
-        <span id="metric-por-cobrar" class="text-lg font-black text-amber-400">$0.00</span>
-      </div>
-      <div class="bg-brand-card p-2.5 rounded-xl border border-slate-700">
-        <span class="text-[10px] uppercase text-slate-400 font-bold block">Cuentas Cobradas</span>
-        <span id="metric-total-cuentas" class="text-lg font-black text-white">0</span>
-      </div>
-      <div class="bg-brand-card p-2.5 rounded-xl border border-slate-700">
-        <span class="text-[10px] uppercase text-slate-400 font-bold block">Personas Atendidas</span>
-        <span id="metric-total-personas" class="text-lg font-black text-brand-accent">0</span>
-      </div>
-    </div>
-
-    <p class="text-[10px] text-slate-400 mb-1.5 px-1">💡 Toca cualquier fila para ver el desglose completo de la venta.</p>
-
-    <!-- Tabla de Ventas del Día -->
-    <div class="bg-brand-card rounded-xl border border-slate-700 flex-1 overflow-x-auto">
-      <table class="w-full text-left text-xs">
-        <thead class="bg-slate-900/60 text-slate-400 font-bold border-b border-slate-700">
-          <tr>
-            <th class="p-2.5">Hora</th>
-            <th class="p-2.5">Ubicación</th>
-            <th class="p-2.5">Detalle</th>
-            <th class="p-2.5 text-right">Total</th>
-            <th class="p-2.5 text-center">Estado</th>
-            <th class="p-2.5 text-center">Borrar</th>
-          </tr>
-        </thead>
-        <tbody id="tabla-corte-body" class="divide-y divide-slate-800 text-slate-200"></tbody>
-      </table>
-    </div>
-  </main>
-
-  <!-- ================= VISTA 3: ANALÍTICA (VISOR PURO DEL SERVIDOR) ================= -->
-  <main id="vista-analitica" class="flex-1 flex flex-col p-4 overflow-y-auto hidden">
-    <div class="bg-brand-card p-5 rounded-2xl border border-slate-700 flex-1 flex flex-col items-center justify-center text-center space-y-3">
-      <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/40 flex items-center justify-center text-2xl">
-        📊
-      </div>
-      <h2 class="font-black text-base text-brand-accent">Visor de Analítica Conectado al Servidor</h2>
-      <p class="text-xs text-slate-400 max-w-sm leading-relaxed">
-        Esta sección no almacena ni procesa datos en la memoria del teléfono. Funciona exclusivamente como pantalla de lectura de las tablas procesadas en el servidor.
-      </p>
-      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 w-full max-w-sm text-left text-[11px] text-slate-400 font-mono space-y-1">
-        <p>• Memoria local usada: <span class="text-emerald-400 font-bold">0 KB (Desacoplado)</span></p>
-        <p>• Fuente de datos: <span class="text-amber-400 font-bold">Tablas Procesadas (Servidor)</span></p>
-        <p>• Estado del módulo: <span class="text-slate-300">En espera de configuración de métricas</span></p>
-      </div>
-    </div>
-  </main>
-
-  <!-- ================= MODAL 1: SELECTOR DE CARNITAS ($340/Kg) CORREGIDO ================= -->
-  <div id="modal-kilo" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50">
-    <div class="bg-brand-card border border-slate-700 rounded-2xl w-full max-w-xs sm:max-w-sm p-4 space-y-3.5 overflow-hidden">
-      <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-        <div>
-          <h3 class="font-black text-base text-brand-accent">Carnitas por Kilo</h3>
-          <p class="text-[11px] text-slate-400">Precio base: $340.00 / Kg</p>
-        </div>
-        <button onclick="cerrarModalKilo()" class="text-slate-400 font-bold text-lg px-2">✕</button>
-      </div>
-
-      <!-- Recuadro de selección con Grid estricto de 4 columnas (Evita desbordamiento en Android) -->
-      <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 w-full overflow-hidden">
-        <div class="flex justify-between items-center mb-2">
-          <span class="text-xs font-bold text-slate-300">Cantidad (Kg):</span>
-          <button onclick="setearKilosModal(0)" class="text-[11px] text-red-400 font-bold">Reiniciar a 0</button>
-        </div>
-        
-        <div class="grid grid-cols-4 gap-2 items-center w-full">
-          <button onclick="sumarKilosModal(-1)" class="col-span-1 h-11 bg-slate-800 rounded-xl font-black text-base text-brand-accent border border-slate-700 active:scale-95 flex items-center justify-center">-1</button>
-          <input type="number" step="0.25" id="input-kilos-modal" oninput="recalcularDesdeKilosModal()" class="col-span-2 min-w-0 w-full bg-slate-950 border border-slate-700 rounded-xl h-11 text-center font-black text-xl text-white focus:outline-none focus:border-brand-accent" value="1">
-          <button onclick="sumarKilosModal(1)" class="col-span-1 h-11 bg-slate-800 rounded-xl font-black text-base text-brand-accent border border-slate-700 active:scale-95 flex items-center justify-center">+1</button>
-        </div>
-
-        <div class="grid grid-cols-3 gap-1.5 mt-2.5">
-          <button onclick="sumarKilosModal(0.25)" class="py-2 bg-slate-800 rounded-lg border border-slate-600 text-xs font-bold text-white active:scale-95">
-            + 1/4 Kg <span class="block text-[10px] text-brand-accent">+$85</span>
-          </button>
-          <button onclick="sumarKilosModal(0.5)" class="py-2 bg-slate-800 rounded-lg border border-slate-600 text-xs font-bold text-white active:scale-95">
-            + 1/2 Kg <span class="block text-[10px] text-brand-accent">+$170</span>
-          </button>
-          <button onclick="sumarKilosModal(0.75)" class="py-2 bg-slate-800 rounded-lg border border-slate-600 text-xs font-bold text-white active:scale-95">
-            + 3/4 Kg <span class="block text-[10px] text-brand-accent">+$255</span>
-          </button>
-        </div>
-      </div>
-
-      <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between gap-2">
-        <span class="text-Esta versión (**v4.1**) corrige el desbordamiento en Android, intercepta el botón físico/gesto de retroceso del teléfono y añade el desglose emergente de registros:
-
-1. **Bloqueo del Botón "Atrás" de Android (`History API` + `popstate`):**
-   * En los navegadores móviles, un `<input type="number">` con `flex-1` carece de ancho mínimo cero (`min-w-0`), pero además la navegación en una sola página no registra historial, por lo que Android cierra la app al pulsar "Atrás".
-   * Se implementó una trampa de historial (`window.history.pushState`). Si estás en **un modal abierto**, el botón "Atrás" cierra primero el modal; si estás **anotando en una mesa**, en **Cierre Hoy** o en **Analítica**, el botón "Atrás" te regresa al **Plano del Salón 2D**; y si ya estás en el Plano del Salón, absorbe el toque y **no cierra la aplicación**.
-2. **Emergente de Detalle de Orden en "Cierre Hoy":**
-   * Al tocar cualquier parte de una fila de venta en la tabla (excepto el botón `🗑️`), se abre un ticket emergente con la información completa: ID del registro, ubicación, cantidad de comensales, hora de apertura, hora de cierre, terminal que cobró, lista completa de productos sin recortes, efectivo recibido y cambio entregado.
-3. **Corrección del Desbordamiento en el Modal de Kilos:**
-   * En Android Chrome, los `<input>` tienen un ancho intrínseco de ~150px que ignora `flex-1` si no tiene `min-w-0`, empujando el botón `+1` fuera de la pantalla. Se reemplazó por una cuadrícula estricta (`grid-cols-4`: botón `-1` de 1 columna, barra numérica de 2 columnas con `min-w-0 w-full`, y botón `+1` de 1 columna) para que jamás se salga del recuadro en ningún tamaño de celular.
-4. **Nuevas Tarjetas de Estadísticas en "Cierre Hoy":**
-   * Se eliminó **Carnitas x Kg Hoy** y se dividió la métrica conjunta en dos tarjetas independientes: **Cuentas Cerradas** y **Personas Atendidas**.
-
----
-
-### Código Completo (`index.html` - v4.1)
-
-Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw.js` a `jarocho-pos-v4.1` para ver los cambios de inmediato):
-
-```html
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Carnitas El Jarocho - POS v4.1</title>
-  <link rel="manifest" href="./manifest.json">
-  <meta name="theme-color" content="#F59E0B">
-  <link rel="apple-touch-icon" href="./icon.png">
-  <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
-  <script src="[https://unpkg.com/dexie@3.2.4/dist/dexie.js](https://unpkg.com/dexie@3.2.4/dist/dexie.js)"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: { dark: '#0F172A', card: '#1E293B', accent: '#F59E0B', text: '#F8FAFC' }
-          }
-        }
-      }
-    }
-  </script>
-  <style>
-    * { -webkit-tap-highlight-color: transparent; user-select: none; box-sizing: border-box; }
-    input[type="number"]::-webkit-inner-spin-button,
-    input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-  </style>
-</head>
-<body class="bg-brand-dark text-brand-text flex flex-col h-screen overflow-hidden font-sans">
-
-  <!-- TOP BAR -->
-  <header class="bg-brand-card px-3 py-2 border-b border-slate-700 flex justify-between items-center shrink-0">
-    <div class="flex items-center gap-2" onclick="configurarDispositivo()">
-      <img src="./icon.png" alt="Logo" onerror="this.style.display='none'" class="w-8 h-8 rounded-lg object-cover border border-brand-accent">
-      <div class="cursor-pointer">
-        <h1 class="font-black text-sm tracking-wide text-brand-accent leading-none">EL JAROCHO</h1>
-        <p id="label-device-header" class="text-[10px] text-emerald-400 font-mono mt-0.5">ID: Cargando...</p>
-      </div>
-    </div>
-    <div class="flex gap-1.5">
-      <button onclick="irAMapaMesas()" id="btn-tab-comanda" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-brand-accent text-slate-900 transition">Mesas</button>
-      <button onclick="cambiarVista('corte')" id="btn-tab-corte" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 transition">Cierre Hoy</button>
-      <button onclick="cambiarVista('analitica')" id="btn-tab-analitica" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 transition">Analítica</button>
-    </div>
-  </header>
-
-  <!-- ================= VISTA 1: SALÓN 2D Y ORDEN DE MESA (50/50) ================= -->
-  <main id="vista-comanda" class="flex-1 flex flex-col overflow-hidden">
-
-    <!-- SUB-VISTA 1A: MAPA AÉREO 2D DEL SALÓN -->
-    <section id="subvista-mapa-salon" class="flex-1 flex flex-col p-3 overflow-hidden">
-      <div class="flex justify-between items-center mb-2 shrink-0 px-1">
-        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Plano del Salón (Toca una ubicación)</span>
-        <span id="resumen-salon-activo" class="text-xs font-black text-brand-accent">En mesas: $0.00</span>
-      </div>
-
-      <!-- RECTÁNGULO DELIMITADOR DEL SALÓN -->
-      <div class="flex-1 border-2 border-slate-700/80 rounded-2xl bg-slate-900/50 p-3 grid grid-rows-6 grid-cols-2 gap-2.5 relative shadow-inner">
-        
-        <!-- Fila 1 (Primer 1/6 superior): Dos cuadrados Para Llevar centrados arriba -->
-        <div class="col-span-2 row-span-1 flex justify-center items-stretch gap-3 px-4 pb-1 border-b border-dashed border-slate-800">
-          <div id="slot-llevar-1" class="w-1/2 max-w-[150px] flex"></div>
-          <div id="slot-llevar-2" class="w-1/2 max-w-[150px] flex"></div>
-        </div>
-
-        <!-- Fila 2: Izquierda vacía | Derecha Mesa 1 -->
-        <div class="col-start-1 row-start-2 flex items-center justify-center pointer-events-none">
-          <span class="text-[10px] uppercase tracking-widest text-slate-700 font-bold rotate-[-90deg] sm:rotate-0">Acceso / Pasillo</span>
-        </div>
-        <div id="slot-mesa-1" class="col-start-2 row-start-2 flex"></div>
-
-        <!-- Fila 3: Izquierda vacía | Derecha Mesa 2 -->
-        <div class="col-start-1 row-start-3"></div>
-        <div id="slot-mesa-2" class="col-start-2 row-start-3 flex"></div>
-
-        <!-- Fila 4: Izquierda Mesa 5 | Derecha Mesa 3 -->
-        <div id="slot-mesa-5" class="col-start-1 row-start-4 flex"></div>
-        <div id="slot-mesa-3" class="col-start-2 row-start-4 flex"></div>
-
-        <!-- Fila 5: Izquierda Mesa 6 | Derecha Mesa 4 -->
-        <div id="slot-mesa-6" class="col-start-1 row-start-5 flex"></div>
-        <div id="slot-mesa-4" class="col-start-2 row-start-5 flex"></div>
-
-        <!-- Fila 6: Margen inferior de referencia -->
-        <div class="col-span-2 row-start-6 flex items-center justify-between px-3 text-[10px] text-slate-600 font-semibold border-t border-dashed border-slate-800/70">
-          <span>Lado Izquierdo (Mesas 5-6)</span>
-          <span>Lado Derecho (Mesas 1-4)</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- SUB-VISTA 1B: CAPTURA DE ORDEN DE LA MESA (50% / 50%) -->
-    <section id="subvista-orden-mesa" class="flex-1 flex flex-col overflow-hidden hidden">
-      
-      <!-- MITAD SUPERIOR (50%): Cabecera de Mesa, Comensales y Productos -->
-      <div class="h-1/2 flex flex-col p-2.5 overflow-y-auto border-b-2 border-slate-700 bg-brand-dark">
-        <div class="bg-brand-card p-2 rounded-xl border border-slate-700 flex justify-between items-center mb-2 shrink-0">
-          <div class="flex items-center gap-2">
-            <button onclick="irAMapaMesas()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-black border border-slate-600 active:scale-95">
+            <button onclick="irAMapaMesas()" class="px-2.5 py-1.5 bg-slate-800 text-slate-200 rounded-lg text-xs font-black border border-slate-600 active:scale-95">
               ← Salón
             </button>
             <div>
@@ -391,7 +108,6 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
         <div class="grid grid-cols-2 gap-2 flex-1" id="grid-productos"></div>
       </div>
 
-      <!-- MITAD INFERIOR (50%): Recuento de Productos y Botón de Cobro -->
       <div class="h-1/2 bg-brand-card flex flex-col overflow-hidden">
         <div class="px-3 py-1.5 border-b border-slate-700 flex justify-between items-center shrink-0 bg-slate-900/50">
           <h2 class="font-bold text-xs text-slate-300">Hoja de Pedido (<span id="subtitulo-mesa">Mesa 1</span>)</h2>
@@ -410,24 +126,22 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
           </button>
         </div>
       </div>
-
     </section>
   </main>
 
-  <!-- ================= VISTA 2: CIERRE HOY ================= -->
+  <!-- [UI: VISTA CIERRE HOY] -->
   <main id="vista-corte" class="flex-1 flex flex-col p-3 overflow-y-auto hidden">
     <div class="flex justify-between items-center bg-brand-card p-2.5 rounded-xl border border-slate-700 mb-3 shrink-0">
       <div>
         <span class="text-[10px] uppercase text-slate-400 font-bold block">Jornada Activa (CDMX)</span>
         <span id="label-fecha-operativa-hoy" class="text-sm font-black text-white font-mono">----</span>
-        <span id="badge-cancelaciones-pendientes" class="hidden text-[10px] text-red-400 font-bold block">0 bajas pendientes de notificar</span>
+        <span id="badge-cancelaciones-pendientes" class="hidden text-[10px] text-red-400 font-bold block">0 bajas pendientes</span>
       </div>
       <button onclick="sincronizarConServidor()" id="btn-sync-servidor" class="px-3.5 py-2.5 bg-brand-accent text-slate-950 text-xs font-black rounded-xl shadow active:scale-95 transition">
         ☁️ Enviar Cierre al Servidor
       </button>
     </div>
 
-    <!-- 4 Métricas Operativas del Día (Cuentas y Personas separadas) -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3 shrink-0">
       <div class="bg-brand-card p-2.5 rounded-xl border border-slate-700">
         <span class="text-[10px] uppercase text-slate-400 font-bold block">Venta Cobrada Hoy</span>
@@ -448,10 +162,9 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
     </div>
 
     <div class="flex justify-between items-center mb-1.5 px-1 shrink-0">
-      <span class="text-[10px] text-slate-400 uppercase font-bold">Toca cualquier fila para ver el detalle completo</span>
+      <span class="text-[10px] text-slate-400 uppercase font-bold">Toca un registro para ver su detalle</span>
     </div>
 
-    <!-- Tabla de Ventas del Día -->
     <div class="bg-brand-card rounded-xl border border-slate-700 flex-1 overflow-x-auto">
       <table class="w-full text-left text-xs">
         <thead class="bg-slate-900/60 text-slate-400 font-bold border-b border-slate-700">
@@ -469,25 +182,18 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
     </div>
   </main>
 
-  <!-- ================= VISTA 3: ANALÍTICA (VISOR PURO DEL SERVIDOR) ================= -->
+  <!-- [UI: VISTA ANALITICA] -->
   <main id="vista-analitica" class="flex-1 flex flex-col p-4 overflow-y-auto hidden">
     <div class="bg-brand-card p-5 rounded-2xl border border-slate-700 flex-1 flex flex-col items-center justify-center text-center space-y-3">
-      <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/40 flex items-center justify-center text-2xl">
-        📊
-      </div>
+      <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/40 flex items-center justify-center text-2xl">📊</div>
       <h2 class="font-black text-base text-brand-accent">Visor de Analítica Conectado al Servidor</h2>
       <p class="text-xs text-slate-400 max-w-sm leading-relaxed">
-        Esta sección no almacena ni procesa datos en la memoria del teléfono. Funciona exclusivamente como pantalla de lectura de las tablas procesadas en el servidor.
+        Módulo de solo lectura alimentado por las tablas procesadas en el servidor.
       </p>
-      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 w-full max-w-sm text-left text-[11px] text-slate-400 font-mono space-y-1">
-        <p>• Memoria local usada: <span class="text-emerald-400 font-bold">0 KB (Desacoplado)</span></p>
-        <p>• Fuente de datos: <span class="text-amber-400 font-bold">Tablas Oro (Servidor)</span></p>
-        <p>• Estado del módulo: <span class="text-slate-300">En espera de configuración de métricas</span></p>
-      </div>
     </div>
   </main>
 
-  <!-- ================= MODAL 1: SELECTOR ACUMULADOR DE CARNITAS (CORREGIDO SIN DESBORDE) ================= -->
+  <!-- [MODAL: CARNITAS POR KILO] -->
   <div id="modal-kilo" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50">
     <div class="bg-brand-card border border-slate-700 rounded-2xl w-full max-w-xs sm:max-w-sm p-4 space-y-3.5 overflow-hidden">
       <div class="flex justify-between items-center border-b border-slate-700 pb-2">
@@ -498,13 +204,12 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
         <button onclick="cerrarModalKilo()" class="text-slate-400 font-bold text-lg px-2">✕</button>
       </div>
 
-      <!-- Recuadro de selección con Grid estricto de 4 columnas (Evita que el input empuje a +1) -->
       <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 w-full overflow-hidden">
         <div class="flex justify-between items-center mb-2">
           <span class="text-xs font-bold text-slate-300">Cantidad (Kg):</span>
           <button onclick="setearKilosModal(0)" class="text-[11px] text-red-400 font-bold">Reiniciar a 0</button>
         </div>
-        
+
         <div class="grid grid-cols-4 gap-2 items-center w-full">
           <button onclick="sumarKilosModal(-1)" class="col-span-1 h-11 bg-slate-800 rounded-xl font-black text-base text-brand-accent border border-slate-700 active:scale-95 flex items-center justify-center">-1</button>
           <input type="number" step="0.25" id="input-kilos-modal" oninput="recalcularDesdeKilosModal()" class="col-span-2 w-full min-w-0 bg-slate-950 border border-slate-700 rounded-xl h-11 text-center font-black text-xl text-white focus:outline-none focus:border-brand-accent" value="1">
@@ -535,7 +240,7 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
     </div>
   </div>
 
-  <!-- ================= MODAL 2: CALCULADORA DE CAMBIO Y COBRO ================= -->
+  <!-- [MODAL: CALCULADORA DE COBRO] -->
   <div id="modal-cobro" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50">
     <div class="bg-brand-card border border-slate-700 rounded-2xl w-full max-w-sm p-4 space-y-4">
       <div class="flex justify-between items-center border-b border-slate-700 pb-2">
@@ -578,7 +283,7 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
     </div>
   </div>
 
-  <!-- ================= MODAL 3: EMERGENTE DE DETALLE DE REGISTRO (CIERRE HOY) ================= -->
+  <!-- [MODAL: DETALLE DE ORDEN] -->
   <div id="modal-detalle-orden" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50" onclick="cerrarModalDetalleOrden()">
     <div class="bg-brand-card border border-slate-700 rounded-2xl w-full max-w-sm p-4 space-y-3 shadow-2xl" onclick="event.stopPropagation()">
       <div class="flex justify-between items-start border-b border-slate-700 pb-2.5">
@@ -587,13 +292,12 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
           <h3 id="detalle-modal-mesa" class="font-black text-lg text-brand-accent mt-1">Mesa 1</h3>
           <p id="detalle-modal-id" class="text-[10px] text-slate-500 font-mono">ID: ----</p>
         </div>
-        <button onclick="cerrarModalDetalleOrden()" class="text-slate-400 hover:text-white font-bold text-lg px-2">✕</button>
+        <button onclick="cerrarModalDetalleOrden()" class="text-slate-400 font-bold text-lg px-2">✕</button>
       </div>
 
-      <!-- Metadatos de Tiempo y Comensales -->
       <div class="grid grid-cols-2 gap-2 bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 text-xs">
         <div>
-          <span class="text-[10px] text-slate-400 block">Horario (Apertura - Cierre)</span>
+          <span class="text-[10px] text-slate-400 block">Horario</span>
           <span id="detalle-modal-horario" class="font-mono font-bold text-white">--:-- a --:--</span>
         </div>
         <div>
@@ -602,13 +306,11 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
         </div>
       </div>
 
-      <!-- Lista completa de Productos de la Orden -->
       <div>
         <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1.5">Desglose de Productos</span>
         <div id="detalle-modal-lista-productos" class="max-h-48 overflow-y-auto space-y-1.5 pr-1"></div>
       </div>
 
-      <!-- Resumen Financiero de la Orden -->
       <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-1 text-xs">
         <div class="flex justify-between text-slate-400">
           <span>Efectivo recibido:</span>
@@ -624,7 +326,7 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
         </div>
       </div>
 
-      <button onclick="cerrarModalDetalleOrden()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs border border-slate-600">
+      <button onclick="cerrarModalDetalleOrden()" class="w-full py-2.5 bg-slate-800 text-slate-200 font-bold rounded-xl text-xs border border-slate-600">
         Cerrar Detalle
       </button>
     </div>
@@ -633,88 +335,58 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
   <script>
     const PRECIO_KILO_CARNITAS = 340;
 
-    // =========================================================================
-    // 0. CONTROL DEL BOTÓN "ATRÁS" DE ANDROID (Previene salida accidental)
-    // =========================================================================
+    // [CORE: NAVEGACION ANDROID BACK BUTTON]
     function inicializarControlBotonAtrasAndroid() {
-      // Empujar estados iniciales al historial del navegador móvil
       window.history.replaceState({ root: true }, "", window.location.href);
       window.history.pushState({ lock: true }, "", window.location.href);
 
       window.addEventListener("popstate", () => {
-        // Re-inyectar inmediatamente el estado de bloqueo para que nunca se vacíe el historial
         window.history.pushState({ lock: true }, "", window.location.href);
 
-        // 1. Si hay algún modal emergente abierto, el botón Atrás cierra primero el modal
-        const modalDetalle = document.getElementById("modal-detalle-orden");
-        const modalKilo = document.getElementById("modal-kilo");
-        const modalCobro = document.getElementById("modal-cobro");
+        const mDetalle = document.getElementById("modal-detalle-orden");
+        const mKilo = document.getElementById("modal-kilo");
+        const mCobro = document.getElementById("modal-cobro");
 
-        if (!modalDetalle.classList.contains("hidden")) {
-          cerrarModalDetalleOrden();
-          return;
-        }
-        if (!modalKilo.classList.contains("hidden")) {
-          cerrarModalKilo();
-          return;
-        }
-        if (!modalCobro.classList.contains("hidden")) {
-          cerrarModalCobro();
-          return;
-        }
+        if (!mDetalle.classList.contains("hidden")) { cerrarModalDetalleOrden(); return; }
+        if (!mKilo.classList.contains("hidden")) { cerrarModalKilo(); return; }
+        if (!mCobro.classList.contains("hidden")) { cerrarModalCobro(); return; }
 
-        // 2. Si está en Cierre Hoy, en Analítica o dentro de la Orden de una Mesa -> Regresar al Plano 2D del Salón
         const enCorte = !document.getElementById("vista-corte").classList.contains("hidden");
         const enAnalitica = !document.getElementById("vista-analitica").classList.contains("hidden");
         const enOrdenMesa = !document.getElementById("subvista-orden-mesa").classList.contains("hidden");
 
         if (enCorte || enAnalitica || enOrdenMesa) {
           irAMapaMesas();
-          return;
         }
-        // 3. Si ya está en el Plano 2D del Salón (Mesas), absorbe el botón Atrás y NO cierra la aplicación
       });
     }
 
-    // =========================================================================
-    // 1. RELOJ Y ZONA HORARIA ESTRICTA DE CIUDAD DE MÉXICO (America/Mexico_City)
-    // =========================================================================
+    // [CORE: TIEMPO CDMX]
     function obtenerTiempoCDMX(dateObj = new Date()) {
       const fmt = new Intl.DateTimeFormat('en-CA', {
         timeZone: 'America/Mexico_City',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
       });
-      const partes = Object.fromEntries(fmt.formatToParts(dateObj).map(p => [p.type, p.value]));
-      const horaLimpia = partes.hour === '24' ? '00' : partes.hour;
+      const p = Object.fromEntries(fmt.formatToParts(dateObj).map(x => [x.type, x.value]));
+      const h = p.hour === '24' ? '00' : p.hour;
       const ms = String(dateObj.getMilliseconds()).padStart(3, '0');
-
-      const fechaOperativa = `${partes.year}-${partes.month}-${partes.day}`;
-      const horaMinuto = `${horaLimpia}:${partes.minute}`;
-      const timestampLocalISO = `${fechaOperativa}T${horaLimpia}:${partes.minute}:${partes.second}.${ms}-06:00`;
+      const fecha = `${p.year}-${p.month}-${p.day}`;
 
       return {
-        fecha_operativa: fechaOperativa,
-        hora_corta: horaMinuto,
-        iso_cdmx: timestampLocalISO
+        fecha_operativa: fecha,
+        hora_corta: `${h}:${p.minute}`,
+        iso_cdmx: `${fecha}T${h}:${p.minute}:${p.second}.${ms}-06:00`
       };
     }
 
-    // =========================================================================
-    // 2. IDENTIDAD DEL DISPOSITIVO Y CONFIGURACIÓN DEL SERVIDOR
-    // =========================================================================
+    // [CORE: IDENTIDAD Y CONFIGURACION]
     function obtenerMetadataDispositivo() {
       let deviceId = localStorage.getItem("jarocho_device_id");
       let deviceAlias = localStorage.getItem("jarocho_device_alias");
 
       if (!deviceId) {
-        const randomHex = Math.random().toString(16).substring(2, 6).toUpperCase();
-        deviceId = `JAROCHO-${randomHex}`;
+        deviceId = `JAROCHO-${Math.random().toString(16).substring(2, 6).toUpperCase()}`;
         localStorage.setItem("jarocho_device_id", deviceId);
       }
       if (!deviceAlias) {
@@ -723,16 +395,12 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
       }
 
       document.getElementById("label-device-header").innerText = `${deviceAlias} (${deviceId})`;
-      return {
-        device_id: deviceId,
-        device_alias: deviceAlias,
-        user_agent: navigator.userAgent
-      };
+      return { device_id: deviceId, device_alias: deviceAlias, user_agent: navigator.userAgent };
     }
 
     function configurarDispositivo() {
       const actualAlias = localStorage.getItem("jarocho_device_alias") || "Terminal 1";
-      const nuevoAlias = prompt("Nombre de este teléfono (ej. Mesero 1, Caja):", actualAlias);
+      const nuevoAlias = prompt("Nombre de este teléfono:", actualAlias);
       if (nuevoAlias && nuevoAlias.trim() !== "") {
         localStorage.setItem("jarocho_device_alias", nuevoAlias.trim());
       }
@@ -745,9 +413,7 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
       obtenerMetadataDispositivo();
     }
 
-    // =========================================================================
-    // 3. BASE DE DATOS LOCAL E INICIALIZACIÓN DE SALÓN (8 UBICACIONES)
-    // =========================================================================
+    // [CORE: ALMACENAMIENTO INDEXEDDB]
     const db = new Dexie("ElJarochoDB_v4");
     db.version(1).stores({
       mesas_activas: "mesa_id",
@@ -782,7 +448,6 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
       const hoyCDMX = obtenerTiempoCDMX().fecha_operativa;
       fechaOperativaActiva = hoyCDMX;
       document.getElementById("label-fecha-operativa-hoy").innerText = hoyCDMX;
-
       await db.ordenes.where("fecha_operativa").notEqual(hoyCDMX).delete();
       await db.cancelaciones_pendientes.where("fecha_operativa").notEqual(hoyCDMX).delete();
     }
@@ -793,36 +458,27 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
       await verificarCambioDeDiaAutomatico();
 
       setInterval(async () => {
-        const hoyCheck = obtenerTiempoCDMX().fecha_operativa;
-        if (hoyCheck !== fechaOperativaActiva) {
+        if (obtenerTiempoCDMX().fecha_operativa !== fechaOperativaActiva) {
           await verificarCambioDeDiaAutomatico();
           renderizarTodo();
-          if (!document.getElementById("vista-corte").classList.contains("hidden")) {
-            cargarCorteDelDia();
-          }
+          if (!document.getElementById("vista-corte").classList.contains("hidden")) cargarCorteDelDia();
         }
       }, 30000);
 
       for (const ub of UBICACIONES_MAPA) {
         const guardada = await db.mesas_activas.get(ub.id);
         estadoMesas[ub.id] = guardada || {
-          mesa_id: ub.id,
-          comensales: 1,
-          items: {},
-          fecha_apertura: null,
-          hora_apertura_corta: null
+          mesa_id: ub.id, comensales: 1, items: {}, fecha_apertura: null, hora_apertura_corta: null
         };
       }
       renderizarCatalogo();
       renderizarTodo();
     }
 
-    // =========================================================================
-    // 4. MAPA 2D DEL SALÓN Y NAVEGACIÓN 50/50
-    // =========================================================================
+    // [CORE: LOGICA SALON Y ORDENES]
     function calcularTotalMesa(nombreMesa) {
       const items = estadoMesas[nombreMesa]?.items || {};
-      return Object.values(items).reduce((acc, item) => acc + (item.cantidad * item.precio_unitario), 0);
+      return Object.values(items).reduce((acc, i) => acc + (i.cantidad * i.precio_unitario), 0);
     }
 
     function calcularTotalEnMesasAbiertas() {
@@ -831,7 +487,6 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
 
     function renderizarMapaSalon() {
       let sumaEnMesas = 0;
-
       UBICACIONES_MAPA.forEach(ub => {
         const contenedor = document.getElementById(ub.slot);
         if (!contenedor) return;
@@ -841,15 +496,12 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
         sumaEnMesas += total;
         const ocupada = total > 0;
 
-        let clasesCuadro = "w-full h-full rounded-2xl border-2 p-2 flex flex-col justify-between transition active:scale-95 shadow-md ";
-        if (ocupada) {
-          clasesCuadro += "bg-amber-500/20 border-brand-accent text-white";
-        } else {
-          clasesCuadro += "bg-brand-card/90 border-slate-700/80 text-slate-400 hover:border-slate-500";
-        }
+        const clases = ocupada
+          ? "bg-amber-500/20 border-brand-accent text-white"
+          : "bg-brand-card/90 border-slate-700/80 text-slate-400";
 
         contenedor.innerHTML = `
-          <button onclick="abrirOrdenDeMesa('${ub.id}')" class="${clasesCuadro}">
+          <button onclick="abrirOrdenDeMesa('${ub.id}')" class="w-full h-full rounded-2xl border-2 p-2 flex flex-col justify-between transition active:scale-95 shadow-md ${clases}">
             <div class="flex justify-between items-center w-full">
               <span class="font-black text-xs sm:text-sm ${ocupada ? 'text-brand-accent' : 'text-slate-300'}">${ub.etiqueta}</span>
               ${ocupada ? `<span class="text-[10px] bg-slate-900/90 px-1.5 py-0.5 rounded text-slate-200 font-bold">👥 ${m.comensales}</span>` : ''}
@@ -862,7 +514,6 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
           </button>
         `;
       });
-
       document.getElementById("resumen-salon-activo").innerText = `En mesas: $${sumaEnMesas.toFixed(2)}`;
     }
 
@@ -880,9 +531,6 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
       renderizarMapaSalon();
     }
 
-    // =========================================================================
-    // 5. CATÁLOGO Y GESTIÓN DE ORDEN (VISTA 50/50)
-    // =========================================================================
     function renderizarCatalogo() {
       const grid = document.getElementById("grid-productos");
       grid.innerHTML = "";
@@ -890,13 +538,7 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
         const btn = document.createElement("button");
         const spanClass = idx === 4 ? "col-span-2 bg-amber-500/10 border-amber-500/60" : "bg-brand-card border-slate-700";
         btn.className = `${spanClass} border active:border-brand-accent px-3 py-2 rounded-xl flex justify-between items-center text-left shadow active:scale-95 transition`;
-        btn.onclick = () => {
-          if (p.tipo === "pesable") {
-            abrirModalKilo();
-          } else {
-            agregarItemAMesa(p.id, p.nombre, p.precio, 1);
-          }
-        };
+        btn.onclick = () => p.tipo === "pesable" ? abrirModalKilo() : agregarItemAMesa(p.id, p.nombre, p.precio, 1);
         btn.innerHTML = `
           <div>
             <span class="font-black text-xs sm:text-sm text-slate-100 block leading-tight">${p.nombre}</span>
@@ -908,15 +550,14 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
       });
     }
 
+    // [CORE: MODAL KILOS]
     function abrirModalKilo() {
       setearKilosModal(1);
-      document.getElementById("modal-kilo").classList.remove("hidden");
-      document.getElementById("modal-kilo").classList.add("flex");
+      document.getElementById("modal-kilo").classList.replace("hidden", "flex");
     }
 
     function cerrarModalKilo() {
-      document.getElementById("modal-kilo").classList.add("hidden");
-      document.getElementById("modal-kilo").classList.remove("flex");
+      document.getElementById("modal-kilo").classList.replace("flex", "hidden");
     }
 
     function setearKilosModal(kg) {
@@ -937,22 +578,14 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
 
     function recalcularDesdePesosModal() {
       const pesos = parseFloat(document.getElementById("input-pesos-carnitas-modal").value) || 0;
-      const kg = Number((pesos / PRECIO_KILO_CARNITAS).toFixed(3));
-      document.getElementById("input-kilos-modal").value = kg;
+      document.getElementById("input-kilos-modal").value = Number((pesos / PRECIO_KILO_CARNITAS).toFixed(3));
     }
 
     async function confirmarCarnitasAcumuladas() {
       const kg = parseFloat(document.getElementById("input-kilos-modal").value) || 0;
       const pesos = parseFloat(document.getElementById("input-pesos-carnitas-modal").value) || 0;
-
-      if (kg <= 0 || pesos <= 0) {
-        alert("Ingresa una cantidad válida de carnitas.");
-        return;
-      }
-
-      const etiqueta = `Carnitas (${kg} Kg)`;
-      const keyItem = `5_kg_${kg}_${pesos}`;
-      await agregarItemAMesa(keyItem, etiqueta, pesos, 1, kg);
+      if (kg <= 0 || pesos <= 0) { alert("Ingresa una cantidad válida."); return; }
+      await agregarItemAMesa(`5_kg_${kg}_${pesos}`, `Carnitas (${kg} Kg)`, pesos, 1, kg);
       cerrarModalKilo();
     }
 
@@ -963,17 +596,10 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
         m.fecha_apertura = t.iso_cdmx;
         m.hora_apertura_corta = t.hora_corta;
       }
-
       if (m.items[keyId]) {
         m.items[keyId].cantidad += cantidad;
       } else {
-        m.items[keyId] = {
-          item_key: keyId,
-          nombre: nombre,
-          precio_unitario: precioUnitario,
-          cantidad: cantidad,
-          peso_kg_unitario: pesoKg
-        };
+        m.items[keyId] = { item_key: keyId, nombre, precio_unitario: precioUnitario, cantidad, peso_kg_unitario: pesoKg };
       }
       if (navigator.vibrate) navigator.vibrate(25);
       await persistirMesaActual();
@@ -1000,13 +626,7 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
     async function cancelarCuentaMesa() {
       if (calcularTotalMesa(mesaActual) === 0) return;
       if (!confirm(`¿Vaciar toda la cuenta abierta de ${mesaActual}?`)) return;
-      estadoMesas[mesaActual] = {
-        mesa_id: mesaActual,
-        comensales: 1,
-        items: {},
-        fecha_apertura: null,
-        hora_apertura_corta: null
-      };
+      estadoMesas[mesaActual] = { mesa_id: mesaActual, comensales: 1, items: {}, fecha_apertura: null, hora_apertura_corta: null };
       await persistirMesaActual();
     }
 
@@ -1023,19 +643,14 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
       document.getElementById("titulo-mesa-actual").innerText = mesaActual;
       document.getElementById("subtitulo-mesa").innerText = mesaActual;
       document.getElementById("label-comensales").innerText = m.comensales;
-
-      if (m.fecha_apertura) {
-        document.getElementById("hora-apertura-label").innerText = `Abierta ${m.hora_apertura_corta || ''}`;
-      } else {
-        document.getElementById("hora-apertura-label").innerText = "Mesa libre";
-      }
+      document.getElementById("hora-apertura-label").innerText = m.fecha_apertura ? `Abierta ${m.hora_apertura_corta || ''}` : "Mesa libre";
 
       const contenedor = document.getElementById("lista-carrito");
       contenedor.innerHTML = "";
       const keys = Object.keys(m.items);
 
       if (keys.length === 0) {
-        contenedor.innerHTML = `<p class="text-xs text-slate-500 italic text-center mt-6">Sin productos anotados en ${mesaActual}</p>`;
+        contenedor.innerHTML = `<p class="text-xs text-slate-500 italic text-center mt-6">Sin productos en ${mesaActual}</p>`;
       }
 
       keys.forEach(k => {
@@ -1061,27 +676,19 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
       document.getElementById("label-total").innerText = `$${calcularTotalMesa(mesaActual).toFixed(2)}`;
     }
 
-    // =========================================================================
-    // 6. COBRO Y CIERRE DE CUENTA CON MARCA TEMPORAL CDMX
-    // =========================================================================
+    // [CORE: COBRO Y REGISTRO]
     function abrirModalCobro() {
       const total = calcularTotalMesa(mesaActual);
-      if (total <= 0) {
-        alert(`No hay productos en ${mesaActual} para cobrar.`);
-        return;
-      }
+      if (total <= 0) { alert(`No hay productos en ${mesaActual}.`); return; }
       document.getElementById("cobro-nombre-mesa").innerText = mesaActual;
       document.getElementById("cobro-total-pagar").innerText = `$${total.toFixed(2)}`;
       document.getElementById("input-efectivo-recibido").value = total;
       calcularCambioEnVivo();
-
-      document.getElementById("modal-cobro").classList.remove("hidden");
-      document.getElementById("modal-cobro").classList.add("flex");
+      document.getElementById("modal-cobro").classList.replace("hidden", "flex");
     }
 
     function cerrarModalCobro() {
-      document.getElementById("modal-cobro").classList.add("hidden");
-      document.getElementById("modal-cobro").classList.remove("flex");
+      document.getElementById("modal-cobro").classList.replace("flex", "hidden");
     }
 
     function setearPago(billete) {
@@ -1115,23 +722,23 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
       const total = calcularTotalMesa(mesaActual);
       const recibido = parseFloat(document.getElementById("input-efectivo-recibido").value) || total;
       const deviceMeta = obtenerMetadataDispositivo();
-      const tiempoCierre = obtenerTiempoCDMX();
+      const tCierre = obtenerTiempoCDMX();
 
-      const productosDetalle = Object.values(m.items).map(item => ({
-        nombre: item.nombre,
-        precio_unitario: item.precio_unitario,
-        cantidad: item.cantidad,
-        peso_kg_total: item.peso_kg_unitario ? Number((item.peso_kg_unitario * item.cantidad).toFixed(3)) : null,
-        subtotal: item.cantidad * item.precio_unitario
+      const productosDetalle = Object.values(m.items).map(i => ({
+        nombre: i.nombre,
+        precio_unitario: i.precio_unitario,
+        cantidad: i.cantidad,
+        peso_kg_total: i.peso_kg_unitario ? Number((i.peso_kg_unitario * i.cantidad).toFixed(3)) : null,
+        subtotal: i.cantidad * i.precio_unitario
       }));
 
-      const ordenCerrada = {
+      await db.ordenes.add({
         orden_id: `ord_${Date.now()}_${deviceMeta.device_id}`,
-        fecha_operativa: tiempoCierre.fecha_operativa,
-        hora_apertura_cdmx: m.hora_apertura_corta || tiempoCierre.hora_corta,
-        hora_cierre_cdmx: tiempoCierre.hora_corta,
-        fecha_apertura: m.fecha_apertura || tiempoCierre.iso_cdmx,
-        fecha_cierre: tiempoCierre.iso_cdmx,
+        fecha_operativa: tCierre.fecha_operativa,
+        hora_apertura_cdmx: m.hora_apertura_corta || tCierre.hora_corta,
+        hora_cierre_cdmx: tCierre.hora_corta,
+        fecha_apertura: m.fecha_apertura || tCierre.iso_cdmx,
+        fecha_cierre: tCierre.iso_cdmx,
         mesa: mesaActual,
         comensales: m.comensales,
         total: total,
@@ -1139,115 +746,84 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
         cambio_entregado: Math.max(0, recibido - total),
         productos: productosDetalle,
         device_metadata: deviceMeta,
-        sync_status: 0 // 0 = Local, 1 = En Base
-      };
+        sync_status: 0
+      });
 
-      await db.ordenes.add(ordenCerrada);
-
-      estadoMesas[mesaActual] = {
-        mesa_id: mesaActual,
-        comensales: 1,
-        items: {},
-        fecha_apertura: null,
-        hora_apertura_corta: null
-      };
+      estadoMesas[mesaActual] = { mesa_id: mesaActual, comensales: 1, items: {}, fecha_apertura: null, hora_apertura_corta: null };
       await persistirMesaActual();
       cerrarModalCobro();
       if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
-
       irAMapaMesas();
     }
 
-    // =========================================================================
-    // 7. CIERRE HOY, EMERGENTE DE DETALLE, BORRADO Y PUSH AL SERVIDOR
-    // =========================================================================
+    // [CORE: CIERRE HOY, DETALLE Y SINCRONIZACION]
     async function mostrarDetalleOrden(ordenId) {
       const o = await db.ordenes.get(ordenId);
       if (!o) return;
 
-      const badgeEstado = document.getElementById("detalle-modal-estado");
-      if (o.sync_status === 1) {
-        badgeEstado.innerText = "En Base";
-        badgeEstado.className = "px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-500/20 text-emerald-300";
-      } else {
-        badgeEstado.innerText = "Local (Pendiente de envío)";
-        badgeEstado.className = "px-2 py-0.5 text-[10px] font-bold rounded bg-amber-500/20 text-amber-300";
-      }
+      const badge = document.getElementById("detalle-modal-estado");
+      badge.innerText = o.sync_status === 1 ? "En Base" : "Local";
+      badge.className = `px-2 py-0.5 text-[10px] font-bold rounded ${o.sync_status === 1 ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'}`;
 
       document.getElementById("detalle-modal-mesa").innerText = o.mesa;
       document.getElementById("detalle-modal-id").innerText = o.orden_id;
+      document.getElementById("detalle-modal-horario").innerText = `${o.hora_apertura_cdmx || '--:--'} a ${o.hora_cierre_cdmx || '--:--'}`;
+      document.getElementById("detalle-modal-comensales").innerText = `${o.comensales} pers. • ${o.device_metadata?.device_alias || 'Terminal'}`;
 
-      const horaAp = o.hora_apertura_cdmx || (o.fecha_apertura ? o.fecha_apertura.substring(11, 16) : "--:--");
-      const horaCi = o.hora_cierre_cdmx || (o.fecha_cierre ? o.fecha_cierre.substring(11, 16) : "--:--");
-      document.getElementById("detalle-modal-horario").innerText = `${horaAp} a ${horaCi}`;
-
-      const aliasTerm = o.device_metadata?.device_alias || "Terminal";
-      document.getElementById("detalle-modal-comensales").innerText = `${o.comensales} pers. • ${aliasTerm}`;
-
-      const contenedorProd = document.getElementById("detalle-modal-lista-productos");
-      contenedorProd.innerHTML = "";
+      const lista = document.getElementById("detalle-modal-lista-productos");
+      lista.innerHTML = "";
       o.productos.forEach(p => {
-        const div = document.createElement("div");
-        div.className = "flex justify-between items-center bg-slate-900/90 p-2 rounded-lg border border-slate-800 text-xs";
-        div.innerHTML = `
-          <div>
-            <span class="font-bold text-white">${p.cantidad}x ${p.nombre}</span>
-            <span class="block text-[10px] text-slate-400">$${p.precio_unitario.toFixed(2)} c/u</span>
+        lista.innerHTML += `
+          <div class="flex justify-between items-center bg-slate-900/90 p-2 rounded-lg border border-slate-800 text-xs">
+            <div>
+              <span class="font-bold text-white">${p.cantidad}x ${p.nombre}</span>
+              <span class="block text-[10px] text-slate-400">$${p.precio_unitario.toFixed(2)} c/u</span>
+            </div>
+            <span class="font-black text-brand-accent">$${p.subtotal.toFixed(2)}</span>
           </div>
-          <span class="font-black text-brand-accent">$${p.subtotal.toFixed(2)}</span>
         `;
-        contenedorProd.appendChild(div);
       });
 
       document.getElementById("detalle-modal-recibido").innerText = `$${(o.efectivo_recibido || o.total).toFixed(2)}`;
       document.getElementById("detalle-modal-cambio").innerText = `$${(o.cambio_entregado || 0).toFixed(2)}`;
       document.getElementById("detalle-modal-total").innerText = `$${o.total.toFixed(2)}`;
-
-      document.getElementById("modal-detalle-orden").classList.remove("hidden");
-      document.getElementById("modal-detalle-orden").classList.add("flex");
+      document.getElementById("modal-detalle-orden").classList.replace("hidden", "flex");
     }
 
     function cerrarModalDetalleOrden() {
-      document.getElementById("modal-detalle-orden").classList.add("hidden");
-      document.getElementById("modal-detalle-orden").classList.remove("flex");
+      document.getElementById("modal-detalle-orden").classList.replace("flex", "hidden");
     }
 
     async function eliminarRegistroDeCierre(ordenId, event) {
-      if (event) event.stopPropagation(); // Evita que se abra el modal de detalle al tocar el bote de basura
-      const registro = await db.ordenes.get(ordenId);
-      if (!registro) return;
+      if (event) event.stopPropagation();
+      const reg = await db.ordenes.get(ordenId);
+      if (!reg) return;
 
-      if (registro.sync_status === 0) {
-        if (!confirm(`¿Borrar la orden local de ${registro.mesa} ($${registro.total})? Desaparecerá del balance de hoy.`)) return;
+      if (reg.sync_status === 0) {
+        if (!confirm(`¿Borrar orden local de ${reg.mesa} ($${reg.total})?`)) return;
         await db.ordenes.delete(ordenId);
       } else {
-        if (!confirm(`Esta orden de ${registro.mesa} ($${registro.total}) ya está en la Base.\n\n¿Deseas borrarla del balance y enviar instrucción de limpieza (${ordenId}) en el próximo corte?`)) return;
-        const t = obtenerTiempoCDMX();
+        if (!confirm(`Esta orden de ${reg.mesa} ($${reg.total}) ya está en la Base.\n¿Borrar del balance y agendar baja para el próximo envío?`)) return;
         await db.cancelaciones_pendientes.put({
-          orden_id: registro.orden_id,
-          fecha_operativa: registro.fecha_operativa,
-          mesa: registro.mesa,
-          monto_cancelado: registro.total,
-          cancelado_en: t.iso_cdmx
+          orden_id: reg.orden_id,
+          fecha_operativa: reg.fecha_operativa,
+          mesa: reg.mesa,
+          monto_cancelado: reg.total,
+          cancelado_en: obtenerTiempoCDMX().iso_cdmx
         });
         await db.ordenes.delete(ordenId);
       }
-
       cargarCorteDelDia();
     }
 
     async function cargarCorteDelDia() {
       await verificarCambioDeDiaAutomatico();
       const ordenesHoy = await db.ordenes.where("fecha_operativa").equals(fechaOperativaActiva).toArray();
-      const bajasPendientes = await db.cancelaciones_pendientes.toArray();
+      const bajas = await db.cancelaciones_pendientes.toArray();
 
       const badgeBajas = document.getElementById("badge-cancelaciones-pendientes");
-      if (bajasPendientes.length > 0) {
-        badgeBajas.classList.remove("hidden");
-        badgeBajas.innerText = `${bajasPendientes.length} baja(s) lista(s) para limpiar en Base`;
-      } else {
-        badgeBajas.classList.add("hidden");
-      }
+      badgeBajas.classList.toggle("hidden", bajas.length === 0);
+      if (bajas.length > 0) badgeBajas.innerText = `${bajas.length} baja(s) lista(s) para limpiar en Base`;
 
       let ventaTotal = 0;
       let totalComensales = 0;
@@ -1257,9 +833,8 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
       ordenesHoy.reverse().forEach(o => {
         ventaTotal += o.total;
         totalComensales += o.comensales;
-
         const horaTexto = o.hora_cierre_cdmx || o.fecha_cierre.substring(11, 16);
-        const resumenProductos = o.productos.map(p => `${p.cantidad}x ${p.nombre}`).join(", ");
+        const resumen = o.productos.map(p => `${p.cantidad}x ${p.nombre}`).join(", ");
 
         const tr = document.createElement("tr");
         tr.className = "hover:bg-slate-800/60 active:bg-slate-800 cursor-pointer transition";
@@ -1267,7 +842,7 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
         tr.innerHTML = `
           <td class="p-2.5 font-mono text-white">${horaTexto}</td>
           <td class="p-2.5 font-semibold">${o.mesa} <span class="text-[10px] text-slate-400 block">${o.comensales} pers.</span></td>
-          <td class="p-2.5 text-slate-300 max-w-[125px] truncate">${resumenProductos}</td>
+          <td class="p-2.5 text-slate-300 max-w-[120px] truncate">${resumen}</td>
           <td class="p-2.5 font-bold text-right text-emerald-400">$${o.total.toFixed(2)}</td>
           <td class="p-2.5 text-center">
             <span class="px-1.5 py-0.5 text-[9px] font-bold rounded ${o.sync_status === 1 ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'}">
@@ -1275,9 +850,7 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
             </span>
           </td>
           <td class="p-2.5 text-center" onclick="event.stopPropagation()">
-            <button onclick="eliminarRegistroDeCierre('${o.orden_id}', event)" class="px-2.5 py-1.5 bg-red-500/20 hover:bg-red-500/40 text-red-300 rounded-lg text-xs font-bold active:scale-90">
-              🗑️
-            </button>
+            <button onclick="eliminarRegistroDeCierre('${o.orden_id}', event)" class="px-2.5 py-1.5 bg-red-500/20 text-red-300 rounded-lg text-xs font-bold active:scale-90">🗑️</button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -1292,7 +865,6 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
     async function construirPayloadCierre(ordenesAEnviar, cancelacionesAEnviar) {
       const deviceMeta = obtenerMetadataDispositivo();
       const t = obtenerTiempoCDMX();
-
       return {
         batch_id: `batch_${t.fecha_operativa}_${deviceMeta.device_id}_${Date.now()}`,
         fecha_operativa_corte: t.fecha_operativa,
@@ -1316,15 +888,11 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
 
     async function sincronizarConServidor() {
       await verificarCambioDeDiaAutomatico();
-      const pendientes = await db.ordenes
-        .where("fecha_operativa").equals(fechaOperativaActiva)
-        .filter(o => o.sync_status === 0)
-        .toArray();
-
+      const pendientes = await db.ordenes.where("fecha_operativa").equals(fechaOperativaActiva).filter(o => o.sync_status === 0).toArray();
       const cancelaciones = await db.cancelaciones_pendientes.toArray();
 
       if (pendientes.length === 0 && cancelaciones.length === 0) {
-        alert("Todo el cierre de hoy y las bajas ya están sincronizados con el Servidor.");
+        alert("Todo el cierre de hoy ya está en el Servidor.");
         return;
       }
 
@@ -1333,7 +901,7 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
 
       if (!syncUrl) {
         descargarBlobJSON(payload, `respaldo_${payload.batch_id}.json`);
-        alert("No hay URL de Servidor configurada. Se descargó el respaldo automático en tu teléfono y los registros se mantienen en Local para un próximo envío.");
+        alert("Sin URL de Servidor configurada. Se descargó el respaldo automático y los registros siguen en Local.");
         return;
       }
 
@@ -1347,26 +915,20 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
-
-        const textoRespuesta = await res.text();
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}: ${textoRespuesta}`);
-        }
+        const txt = await res.text();
+        if (!res.ok) throw new Error(`HTTP ${res.status}: ${txt}`);
 
         if (pendientes.length > 0) {
-          const ids = pendientes.map(o => o.orden_id);
-          await db.ordenes.where("orden_id").anyOf(ids).modify({ sync_status: 1 });
+          await db.ordenes.where("orden_id").anyOf(pendientes.map(o => o.orden_id)).modify({ sync_status: 1 });
         }
         if (cancelaciones.length > 0) {
           await db.cancelaciones_pendientes.clear();
         }
-
-        alert(`✅ Envío exitoso al Servidor (${pendientes.length} órdenes nuevas, ${cancelaciones.length} bajas notificadas).`);
+        alert(`✅ Envío exitoso al Servidor (${pendientes.length} órdenes, ${cancelaciones.length} bajas).`);
         cargarCorteDelDia();
       } catch (err) {
         descargarBlobJSON(payload, `respaldo_${payload.batch_id}.json`);
-        alert(`⚠️ No se pudo conectar con el Servidor (${err.message}).\n\nSe descargó una copia automática de respaldo y los registros siguen guardados como 'Local' para reintentar más tarde.`);
-        console.error(err);
+        alert(`⚠️ Falló conexión (${err.message}). Se descargó copia de respaldo y los registros permanecen en Local.`);
       } finally {
         btn.innerText = "☁️ Enviar Cierre al Servidor";
         btn.disabled = false;
@@ -1385,8 +947,7 @@ Reemplaza tu `index.html` con este código (y sube la versión del caché en `sw
     function cambiarVista(vista) {
       ["comanda", "corte", "analitica"].forEach(v => {
         document.getElementById(`vista-${v}`).classList.toggle("hidden", v !== vista);
-        const btn = document.getElementById(`btn-tab-${v}`);
-        btn.className = v === vista
+        document.getElementById(`btn-tab-${v}`).className = v === vista
           ? "px-3 py-1.5 text-xs font-bold rounded-lg bg-brand-accent text-slate-900 transition"
           : "px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 transition";
       });
