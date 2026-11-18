@@ -198,7 +198,7 @@
     <div id="placeholder-analitica" class="bg-brand-card/60 border border-slate-800 rounded-2xl p-6 flex-1 flex flex-col items-center justify-center text-center text-slate-400">
       <span class="text-3xl mb-2">📊</span>
       <p class="text-xs font-bold text-slate-300">Visor Conectado al Servidor</p>
-      <p class="text-[11px] text-slate-500 mt-1 max-w-xs">Presiona "Cargar del Servidor" para consultar resúmenes por fecha, gráficas y sugerencias estratégicas.</p>
+      <p class="text-[11px] text-slate-500 mt-1 max-w-xs">Presiona "Cargar del Servidor" para consultar resúmenes por fecha, gráficas semanales/horarias y sugerencias estratégicas.</p>
     </div>
 
     <div id="contenido-analitica-oro" class="space-y-3 hidden pb-6">
@@ -236,10 +236,29 @@
         </div>
       </div>
 
-      <!-- 2. GRÁFICA SEMANAL / MENSUAL -->
+      <!-- 2. NUEVA GRÁFICA: PROMEDIO DE VENTAS DIARIAS POR DÍA DE LA SEMANA (LUNES A DOMINGO) -->
+      <div class="bg-brand-card p-3 rounded-xl border border-slate-700 space-y-2">
+        <span class="text-[11px] font-black uppercase text-brand-accent block">2. Promedio de Venta por Día de la Semana</span>
+        <div class="relative w-full h-48">
+          <canvas id="canvas-dia-semana"></canvas>
+        </div>
+      </div>
+
+      <!-- 3. NUEVA GRÁFICA: DISTRIBUCIÓN HORARIA DE COMENSALES POR DÍA DE SEMANA -->
+      <div class="bg-brand-card p-3 rounded-xl border border-slate-700 space-y-2">
+        <div class="flex justify-between items-center gap-2">
+          <span class="text-[11px] font-black uppercase text-brand-accent">3. Comensales por Hora del Día</span>
+          <select id="select-dia-horario" onchange="renderizarGraficaHorarioComensales()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs font-bold text-white"></select>
+        </div>
+        <div class="relative w-full h-48">
+          <canvas id="canvas-horario-comensales"></canvas>
+        </div>
+      </div>
+
+      <!-- 4. GRÁFICA HISTÓRICA SEMANAL / MENSUAL -->
       <div class="bg-brand-card p-3 rounded-xl border border-slate-700 space-y-2">
         <div class="flex justify-between items-center">
-          <span class="text-[11px] font-black uppercase text-brand-accent">2. Promedio y Venta Total</span>
+          <span class="text-[11px] font-black uppercase text-brand-accent">4. Evolución Semanal y Mensual</span>
           <div class="flex gap-1">
             <button onclick="renderizarGraficaPeriodo('SEMANAL')" id="btn-graf-sem" class="px-2 py-1 text-[10px] font-black rounded bg-brand-accent text-slate-950">Semanal</button>
             <button onclick="renderizarGraficaPeriodo('MENSUAL')" id="btn-graf-men" class="px-2 py-1 text-[10px] font-bold rounded bg-slate-800 text-slate-300">Mensual</button>
@@ -250,17 +269,17 @@
         </div>
       </div>
 
-      <!-- 3. GRÁFICA PRODUCTOS MÁS VENDIDOS -->
+      <!-- 5. GRÁFICA PRODUCTOS MÁS VENDIDOS -->
       <div class="bg-brand-card p-3 rounded-xl border border-slate-700 space-y-2">
-        <span class="text-[11px] font-black uppercase text-brand-accent block">3. Productos Más Vendidos (Unidades)</span>
+        <span class="text-[11px] font-black uppercase text-brand-accent block">5. Productos Más Vendidos (Unidades)</span>
         <div class="relative w-full h-48">
           <canvas id="canvas-productos-top"></canvas>
         </div>
       </div>
 
-      <!-- 4. ESTRATEGIAS Y PROMOCIONES SUGERIDAS -->
+      <!-- 6. ESTRATEGIAS Y PROMOCIONES SUGERIDAS -->
       <div class="bg-brand-card p-3 rounded-xl border border-slate-700 space-y-2">
-        <span class="text-[11px] font-black uppercase text-brand-accent block">4. Estrategia: Horas Valle y Paquetes</span>
+        <span class="text-[11px] font-black uppercase text-brand-accent block">6. Estrategia: Horas Valle y Paquetes</span>
         <div id="lista-estrategias-oro" class="space-y-1.5 text-xs"></div>
       </div>
 
@@ -1020,6 +1039,8 @@
 
     // [CORE: ANALITICA Y GRAFICAS DESDE EL SERVIDOR]
     let datosOroCache = null;
+    let chartDiaSemanaInstance = null;
+    let chartHorarioInstance = null;
     let chartPeriodoInstance = null;
     let chartProductosInstance = null;
 
@@ -1045,6 +1066,8 @@
         document.getElementById("contenido-analitica-oro").classList.remove("hidden");
 
         actualizarOpcionesPeriodo();
+        renderizarGraficaDiaSemana();
+        inicializarSelectorHorarioComensales();
         renderizarGraficaPeriodo('SEMANAL');
         renderizarGraficaProductos();
         renderizarEstrategiasNegocio();
@@ -1089,6 +1112,93 @@
       document.getElementById("res-periodo-ordenes").innerText = reg.total_ordenes;
       document.getElementById("res-periodo-personas").innerText = reg.total_comensales;
       document.getElementById("res-periodo-ticket").innerText = `$${Number(reg.ticket_promedio_mesa).toFixed(2)}`;
+    }
+
+    function renderizarGraficaDiaSemana() {
+      const ds = datosOroCache?.grafica_dia_semana;
+      if (!ds) return;
+
+      const ctx = document.getElementById("canvas-dia-semana").getContext("2d");
+      if (chartDiaSemanaInstance) chartDiaSemanaInstance.destroy();
+
+      chartDiaSemanaInstance = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: ds.dias,
+          datasets: [{
+            label: "Promedio Venta Diaria ($)",
+            data: ds.promedio_venta,
+            backgroundColor: "#F59E0B",
+            borderRadius: 5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, grid: { color: "#334155" }, ticks: { color: "#94A3B8" } },
+            x: { grid: { display: false }, ticks: { color: "#F8FAFC", font: { size: 10, weight: "bold" } } }
+          }
+        }
+      });
+    }
+
+    function inicializarSelectorHorarioComensales() {
+      const mapa = datosOroCache?.grafica_horario_comensales;
+      if (!mapa) return;
+
+      const selectDia = document.getElementById("select-dia-horario");
+      selectDia.innerHTML = "";
+
+      const diasDisponibles = Object.keys(mapa);
+      diasDisponibles.forEach(d => {
+        const opt = document.createElement("option");
+        opt.value = d;
+        opt.innerText = d === "TODOS" ? "Todos los días (Prom.)" : d;
+        selectDia.appendChild(opt);
+      });
+
+      renderizarGraficaHorarioComensales();
+    }
+
+    function renderizarGraficaHorarioComensales() {
+      const mapa = datosOroCache?.grafica_horario_comensales;
+      if (!mapa) return;
+
+      const diaSeleccionado = document.getElementById("select-dia-horario").value;
+      const datosDia = mapa[diaSeleccionado];
+      if (!datosDia) return;
+
+      const ctx = document.getElementById("canvas-horario-comensales").getContext("2d");
+      if (chartHorarioInstance) chartHorarioInstance.destroy();
+
+      chartHorarioInstance = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: datosDia.horas,
+          datasets: [{
+            label: "Promedio Comensales / Hora",
+            data: datosDia.promedio_comensales,
+            borderColor: "#38BDF8",
+            backgroundColor: "rgba(56, 189, 248, 0.2)",
+            borderWidth: 2.5,
+            pointBackgroundColor: "#F59E0B",
+            pointRadius: 4,
+            fill: true,
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: "#CBD5E1", font: { size: 10 } } } },
+          scales: {
+            y: { beginAtZero: true, grid: { color: "#334155" }, ticks: { color: "#94A3B8" } },
+            x: { grid: { display: false }, ticks: { color: "#F8FAFC", font: { size: 10 } } }
+          }
+        }
+      });
     }
 
     function renderizarGraficaPeriodo(modo) {
