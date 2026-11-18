@@ -9,6 +9,7 @@
   <link rel="apple-touch-icon" href="./icon.png">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -182,14 +183,87 @@
     </div>
   </main>
 
-  <!-- [UI: VISTA ANALITICA] -->
-  <main id="vista-analitica" class="flex-1 flex flex-col p-4 overflow-y-auto hidden">
-    <div class="bg-brand-card p-5 rounded-2xl border border-slate-700 flex-1 flex flex-col items-center justify-center text-center space-y-3">
-      <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/40 flex items-center justify-center text-2xl">📊</div>
-      <h2 class="font-black text-base text-brand-accent">Visor de Analítica Conectado al Servidor</h2>
-      <p class="text-xs text-slate-400 max-w-sm leading-relaxed">
-        Módulo de solo lectura alimentado por las tablas procesadas en el servidor.
-      </p>
+  <!-- [UI: VISTA ANALITICA CONECTADA AL SERVIDOR] -->
+  <main id="vista-analitica" class="flex-1 flex flex-col p-3 overflow-y-auto hidden space-y-3">
+    <div class="bg-brand-card p-3 rounded-xl border border-slate-700 flex justify-between items-center shrink-0">
+      <div>
+        <h2 class="font-black text-sm text-brand-accent">Tablero de Inteligencia</h2>
+        <p id="label-ultima-act-analitica" class="text-[10px] text-slate-400">Sin sincronizar en esta sesión</p>
+      </div>
+      <button onclick="descargarAnaliticaServidor()" id="btn-actualizar-analitica" class="px-3 py-2 bg-brand-accent text-slate-950 rounded-xl text-xs font-black shadow active:scale-95 transition">
+        🔄 Cargar del Servidor
+      </button>
+    </div>
+
+    <div id="placeholder-analitica" class="bg-brand-card/60 border border-slate-800 rounded-2xl p-6 flex-1 flex flex-col items-center justify-center text-center text-slate-400">
+      <span class="text-3xl mb-2">📊</span>
+      <p class="text-xs font-bold text-slate-300">Visor Conectado al Servidor</p>
+      <p class="text-[11px] text-slate-500 mt-1 max-w-xs">Presiona "Cargar del Servidor" para consultar resúmenes por fecha, gráficas y sugerencias estratégicas.</p>
+    </div>
+
+    <div id="contenido-analitica-oro" class="space-y-3 hidden pb-6">
+
+      <!-- 1. BUSCADOR POR DÍA, SEMANA, MES O AÑO -->
+      <div class="bg-brand-card p-3 rounded-xl border border-slate-700 space-y-2.5">
+        <span class="text-[11px] font-black uppercase text-brand-accent block">1. Consultar Resumen por Fecha / Periodo</span>
+        <div class="grid grid-cols-2 gap-2">
+          <select id="select-tipo-periodo" onchange="actualizarOpcionesPeriodo()" class="bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs font-bold text-white">
+            <option value="DIA">Por Día Específico</option>
+            <option value="SEMANA">Por Semana (Año-W)</option>
+            <option value="MES">Por Mes (Año-Mes)</option>
+            <option value="ANIO">Por Año</option>
+          </select>
+          <select id="select-clave-periodo" onchange="mostrarResumenPeriodoSeleccionado()" class="bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs font-bold text-brand-accent"></select>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+          <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-800">
+            <span class="text-[9px] uppercase text-slate-400 block">Venta del Periodo</span>
+            <span id="res-periodo-venta" class="text-base font-black text-emerald-400">$0.00</span>
+          </div>
+          <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-800">
+            <span class="text-[9px] uppercase text-slate-400 block">Cuentas Cerradas</span>
+            <span id="res-periodo-ordenes" class="text-base font-black text-white">0</span>
+          </div>
+          <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-800">
+            <span class="text-[9px] uppercase text-slate-400 block">Personas</span>
+            <span id="res-periodo-personas" class="text-base font-black text-white">0</span>
+          </div>
+          <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-800">
+            <span class="text-[9px] uppercase text-slate-400 block">Ticket Prom. Mesa</span>
+            <span id="res-periodo-ticket" class="text-base font-black text-brand-accent">$0.00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. GRÁFICA SEMANAL / MENSUAL -->
+      <div class="bg-brand-card p-3 rounded-xl border border-slate-700 space-y-2">
+        <div class="flex justify-between items-center">
+          <span class="text-[11px] font-black uppercase text-brand-accent">2. Promedio y Venta Total</span>
+          <div class="flex gap-1">
+            <button onclick="renderizarGraficaPeriodo('SEMANAL')" id="btn-graf-sem" class="px-2 py-1 text-[10px] font-black rounded bg-brand-accent text-slate-950">Semanal</button>
+            <button onclick="renderizarGraficaPeriodo('MENSUAL')" id="btn-graf-men" class="px-2 py-1 text-[10px] font-bold rounded bg-slate-800 text-slate-300">Mensual</button>
+          </div>
+        </div>
+        <div class="relative w-full h-52">
+          <canvas id="canvas-ventas-periodo"></canvas>
+        </div>
+      </div>
+
+      <!-- 3. GRÁFICA PRODUCTOS MÁS VENDIDOS -->
+      <div class="bg-brand-card p-3 rounded-xl border border-slate-700 space-y-2">
+        <span class="text-[11px] font-black uppercase text-brand-accent block">3. Productos Más Vendidos (Unidades)</span>
+        <div class="relative w-full h-48">
+          <canvas id="canvas-productos-top"></canvas>
+        </div>
+      </div>
+
+      <!-- 4. ESTRATEGIAS Y PROMOCIONES SUGERIDAS -->
+      <div class="bg-brand-card p-3 rounded-xl border border-slate-700 space-y-2">
+        <span class="text-[11px] font-black uppercase text-brand-accent block">4. Estrategia: Horas Valle y Paquetes</span>
+        <div id="lista-estrategias-oro" class="space-y-1.5 text-xs"></div>
+      </div>
+
     </div>
   </main>
 
@@ -942,6 +1016,188 @@
       a.href = url;
       a.download = nombreArchivo;
       a.click();
+    }
+
+    // [CORE: ANALITICA Y GRAFICAS DESDE EL SERVIDOR]
+    let datosOroCache = null;
+    let chartPeriodoInstance = null;
+    let chartProductosInstance = null;
+
+    async function descargarAnaliticaServidor() {
+      const syncUrl = localStorage.getItem("jarocho_sync_url");
+      if (!syncUrl) {
+        alert("Configura primero la URL del Servidor tocando el encabezado 'EL JAROCHO'.");
+        return;
+      }
+
+      const btn = document.getElementById("btn-actualizar-analitica");
+      btn.innerText = "⏳ Consultando...";
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(syncUrl, { method: "GET" });
+        const data = await res.json();
+        if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+
+        datosOroCache = data;
+        document.getElementById("label-ultima-act-analitica").innerText = `Actualizado: ${data.ultima_actualizacion || 'Reciente'}`;
+        document.getElementById("placeholder-analitica").classList.add("hidden");
+        document.getElementById("contenido-analitica-oro").classList.remove("hidden");
+
+        actualizarOpcionesPeriodo();
+        renderizarGraficaPeriodo('SEMANAL');
+        renderizarGraficaProductos();
+        renderizarEstrategiasNegocio();
+      } catch (err) {
+        alert(`⚠️ No se pudo cargar la analítica: ${err.message}`);
+      } finally {
+        btn.innerText = "🔄 Cargar del Servidor";
+        btn.disabled = false;
+      }
+    }
+
+    function actualizarOpcionesPeriodo() {
+      if (!datosOroCache || !datosOroCache.buscador_periodos) return;
+      const tipo = document.getElementById("select-tipo-periodo").value;
+      const selectClave = document.getElementById("select-clave-periodo");
+      selectClave.innerHTML = "";
+
+      const filtrados = datosOroCache.buscador_periodos.filter(r => r.tipo_periodo === tipo);
+      filtrados.forEach(r => {
+        const opt = document.createElement("option");
+        opt.value = r.clave_periodo;
+        opt.innerText = r.clave_periodo;
+        selectClave.appendChild(opt);
+      });
+      mostrarResumenPeriodoSeleccionado();
+    }
+
+    function mostrarResumenPeriodoSeleccionado() {
+      if (!datosOroCache || !datosOroCache.buscador_periodos) return;
+      const tipo = document.getElementById("select-tipo-periodo").value;
+      const clave = document.getElementById("select-clave-periodo").value;
+      const reg = datosOroCache.buscador_periodos.find(r => r.tipo_periodo === tipo && r.clave_periodo === clave);
+
+      if (!reg) {
+        document.getElementById("res-periodo-venta").innerText = "$0.00";
+        document.getElementById("res-periodo-ordenes").innerText = "0";
+        document.getElementById("res-periodo-personas").innerText = "0";
+        document.getElementById("res-periodo-ticket").innerText = "$0.00";
+        return;
+      }
+      document.getElementById("res-periodo-venta").innerText = `$${Number(reg.venta_total).toLocaleString('es-MX', {minimumFractionDigits: 2})}`;
+      document.getElementById("res-periodo-ordenes").innerText = reg.total_ordenes;
+      document.getElementById("res-periodo-personas").innerText = reg.total_comensales;
+      document.getElementById("res-periodo-ticket").innerText = `$${Number(reg.ticket_promedio_mesa).toFixed(2)}`;
+    }
+
+    function renderizarGraficaPeriodo(modo) {
+      if (!datosOroCache) return;
+      const fuente = modo === 'SEMANAL' ? datosOroCache.grafica_semanal : datosOroCache.grafica_mensual;
+      if (!fuente) return;
+
+      document.getElementById("btn-graf-sem").className = modo === 'SEMANAL'
+        ? "px-2 py-1 text-[10px] font-black rounded bg-brand-accent text-slate-950"
+        : "px-2 py-1 text-[10px] font-bold rounded bg-slate-800 text-slate-300";
+      document.getElementById("btn-graf-men").className = modo === 'MENSUAL'
+        ? "px-2 py-1 text-[10px] font-black rounded bg-brand-accent text-slate-950"
+        : "px-2 py-1 text-[10px] font-bold rounded bg-slate-800 text-slate-300";
+
+      const ctx = document.getElementById("canvas-ventas-periodo").getContext("2d");
+      if (chartPeriodoInstance) chartPeriodoInstance.destroy();
+
+      chartPeriodoInstance = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: fuente.etiquetas,
+          datasets: [
+            {
+              label: "Promedio Diario ($)",
+              data: fuente.promedio_diario,
+              backgroundColor: "#F59E0B",
+              borderRadius: 4
+            },
+            {
+              label: "Venta Total ($)",
+              data: fuente.venta_total,
+              backgroundColor: "#10B981",
+              borderRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: "#CBD5E1", font: { size: 10 } } } },
+          scales: {
+            y: { beginAtZero: true, grid: { color: "#334155" }, ticks: { color: "#94A3B8" } },
+            x: { grid: { display: false }, ticks: { color: "#94A3B8" } }
+          }
+        }
+      });
+    }
+
+    function renderizarGraficaProductos() {
+      const prod = datosOroCache?.grafica_productos;
+      if (!prod) return;
+
+      const ctx = document.getElementById("canvas-productos-top").getContext("2d");
+      if (chartProductosInstance) chartProductosInstance.destroy();
+
+      chartProductosInstance = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: prod.nombres,
+          datasets: [{
+            label: "Unidades",
+            data: prod.unidades,
+            backgroundColor: ["#F59E0B", "#38BDF8", "#A855F7", "#EC4899", "#10B981"],
+            borderRadius: 5
+          }]
+        },
+        options: {
+          indexAxis: "y",
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { beginAtZero: true, grid: { color: "#334155" }, ticks: { color: "#94A3B8" } },
+            y: { grid: { display: false }, ticks: { color: "#F8FAFC", font: { weight: "bold" } } }
+          }
+        }
+      });
+    }
+
+    function renderizarEstrategiasNegocio() {
+      const contenedor = document.getElementById("lista-estrategias-oro");
+      contenedor.innerHTML = "";
+      const est = datosOroCache?.estrategias;
+      if (!est) return;
+
+      if (est.horas_valle && est.horas_valle.length > 0) {
+        est.horas_valle.forEach(h => {
+          contenedor.innerHTML += `
+            <div class="p-2.5 rounded-lg bg-amber-950/40 border border-amber-600/40 text-amber-200">
+              <span class="font-black text-brand-accent block">💡 Hora Valle: ${h.nombre_dia_semana} (${h.franja_horaria})</span>
+              Venta promedio: $${h.venta_promedio_por_hora} — Oportunidad para promoción en este horario.
+            </div>
+          `;
+        });
+      }
+
+      if (est.segmentos_mesa && est.segmentos_mesa.length > 0) {
+        est.segmentos_mesa.forEach(s => {
+          contenedor.innerHTML += `
+            <div class="p-2.5 rounded-lg bg-slate-900/90 border border-slate-800 text-slate-300 flex justify-between items-center">
+              <div>
+                <span class="font-bold text-white block">${s.segmento_comensales}</span>
+                <span class="text-[10px] text-slate-400">Refresco/persona: ${s.porcentaje_personas_con_refresco}% • ${s.sugerencia_paquete}</span>
+              </div>
+              <span class="font-black text-emerald-400">$${s.gasto_promedio_mesa}</span>
+            </div>
+          `;
+        });
+      }
     }
 
     function cambiarVista(vista) {
